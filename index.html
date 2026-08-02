@@ -453,8 +453,8 @@ const SLOTS = {
     { p: [-12.95, 1.3, -2.07], ry: 0 }, { p: [-12.25, 1.3, -2.07], ry: 0 },
     { p: [-12.95, 1.82, -2.07], ry: 0 }, { p: [-12.25, 1.82, -2.07], ry: 0 } ] },
   'bath/wooden-tub': { style: 'flat', s: 0.75, slots: [
-    // the 3 touch-temperature cards float on the water, tilted toward the door
-    { p: [-1.95, 1.02, 8.55], tilt: -0.25 }, { p: [-0.9, 1.02, 8.9], tilt: -0.25 }, { p: [-1.75, 1.02, 9.5], tilt: -0.25 },
+    // the 3 touch-temperature cards float on the water, tilted toward the door, text facing the approach
+    { p: [-1.95, 1.02, 8.55], tilt: -0.25, flipTex: true }, { p: [-0.9, 1.02, 8.9], tilt: -0.25, flipTex: true }, { p: [-1.75, 1.02, 9.5], tilt: -0.25, flipTex: true },
     // the 7 injury-story cards live on the first-aid cabinet (救急箱) by the mirror
     { p: [-3.66, 0.7, 9.95], ry: Math.PI / 2, upright: true, s: 0.45 }, { p: [-3.66, 0.7, 10.45], ry: Math.PI / 2, upright: true, s: 0.45 },
     { p: [-3.66, 0.96, 9.95], ry: Math.PI / 2, upright: true, s: 0.45 }, { p: [-3.66, 0.96, 10.45], ry: Math.PI / 2, upright: true, s: 0.45 },
@@ -522,6 +522,9 @@ for (const [anchor, cards] of Object.entries(byAnchor)) {
     const isSpine = spec && spec.style === 'spine' && i < spec.slots.length;
     const front = isSpine ? spineTexture(c.title, c.sub, false) : cardTexture(c.title, c.sub, false);
     const back = isSpine ? spineTexture(c.en, c.note || '', true) : cardTexture(c.en, c.note || '', true);
+    if (spec && spec.slots[i] && spec.slots[i].flipTex) {  // rotate text 180° in-plane (approach-side reading)
+      for (const t of [front, back]) { t.center.set(0.5, 0.5); t.rotation = Math.PI; }
+    }
     let mesh, style = 'cam', baseY = 0;
     if (spec && i < spec.slots.length) {
       const slot = spec.slots[i];
