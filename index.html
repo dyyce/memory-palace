@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>一日の宮殿 — Memory Palace Complex (3D)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #14100c; }
+  #enter {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px; color: #f5e6d0; cursor: pointer;
+    background: rgba(15, 10, 7, .88); font-family: "Hiragino Sans", "Avenir Next", sans-serif;
+    z-index: 10; text-align: center;
+  }
+  #enter h1 { font-size: 34px; margin: 0; } #enter h1 span { color: #d9a45b; }
+  #enter p { opacity: .8; font-size: 14px; line-height: 1.7; margin: 2px; }
+  #hud {
+    position: fixed; top: 14px; left: 14px; color: #f5e6d0; z-index: 5;
+    font-family: "Hiragino Sans", "Avenir Next", sans-serif;
+    background: rgba(20, 12, 8, .68); border: 1px solid #6b4a2f;
+    border-radius: 10px; padding: 10px 14px; pointer-events: none; max-width: 320px;
+  }
+  #hud .room { font-size: 17px; font-weight: 700; } #hud .room span { color: #d9a45b; }
+  #hud .rule { font-size: 11.5px; color: #8fd0c8; margin-top: 2px; }
+  #cross {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    color: #f5e6d0; font-size: 18px; z-index: 5; pointer-events: none; opacity: .8;
+  }
+  #hint {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    color: #f5e6d0; opacity: .55; font-size: 12px; z-index: 5; pointer-events: none;
+    font-family: "Hiragino Sans", "Avenir Next", sans-serif;
+  }
+</style>
+</head>
+<body>
+<div id="enter">
+  <h1>一日の宮殿 <span>— A Day in Your Life</span></h1>
+  <p>寝室 Bedroom → お風呂 Bath → 台所 Kitchen → 庭園 Garden → 書斎 Study</p>
+  <p><b>Click to enter</b></p>
+  <p>WASD / arrows to walk · mouse to look · E or click to flip the card you're looking at · ESC to release</p>
+</div>
+<div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
+<div id="cross">+</div>
+<div id="hint">E / click = flip card · walk through doorways between rooms</div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.164.1/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+const CARDS = [{"title": "寝る", "sub": "ねる", "en": "to sleep; to go to bed", "note": "verb (ichidan)", "anchor": "bedroom/futon"}, {"title": "眠る", "sub": "ねむる", "en": "to sleep (deeply)", "note": "verb (godan)", "anchor": "bedroom/futon"}, {"title": "起きる", "sub": "おきる", "en": "to wake up; to get up", "note": "verb (ichidan)", "anchor": "bedroom/futon"}, {"title": "昼寝", "sub": "ひるね", "en": "nap", "note": "noun", "anchor": "bedroom/futon"}, {"title": "休む", "sub": "やすむ", "en": "to rest; to take a day off", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "帰る", "sub": "かえる", "en": "to go home; to return", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "終わる", "sub": "おわる", "en": "to finish; to end", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "買う", "sub": "かう", "en": "to buy", "note": "verb (godan)", "anchor": "bedroom/tansu-chest"}, {"title": "飼う", "sub": "かう", "en": "to keep; to own (a pet)", "note": "verb (godan)", "anchor": "bedroom/tansu-chest"}, {"title": "ある", "sub": "ある", "en": "to be; to exist (inanimate)", "note": "verb (irregular)", "anchor": "bedroom/tansu-chest"}, {"title": "いる", "sub": "いる", "en": "to be; to exist (animate)", "note": "verb (ichidan)", "anchor": "bedroom/tansu-chest"}, {"title": "残り", "sub": "のこり", "en": "the rest; the remainder", "note": "noun", "anchor": "bedroom/tansu-chest"}, {"title": "特別な", "sub": "とくべつな", "en": "special", "note": "na-adjective", "anchor": "bedroom/tansu-chest"}, {"title": "熱い", "sub": "あつい", "en": "hot (objects; drinks; things you touch)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "温かい", "sub": "あたたかい", "en": "warm (pleasantly; to the touch)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "冷たい", "sub": "つめたい", "en": "cold (to the touch; drinks; things)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "暑い", "sub": "あつい", "en": "hot (weather; air)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "寒い", "sub": "さむい", "en": "cold (weather; air)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "涼しい", "sub": "すずしい", "en": "cool; pleasantly cool (weather)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "作る", "sub": "つくる", "en": "to make; to cook", "note": "verb (godan)", "anchor": "kitchen/cutting-board"}, {"title": "使う", "sub": "つかう", "en": "to use", "note": "verb (godan)", "anchor": "kitchen/cutting-board"}, {"title": "材料", "sub": "ざいりょう", "en": "ingredients; materials", "note": "noun", "anchor": "kitchen/cutting-board"}, {"title": "道具", "sub": "どうぐ", "en": "tool", "note": "noun", "anchor": "kitchen/cutting-board"}, {"title": "食べる", "sub": "たべる", "en": "to eat", "note": "verb (ichidan)", "anchor": "kitchen/rice-cooker"}, {"title": "壊す", "sub": "こわす", "en": "to break; お腹を壊す = to get an upset stomach", "note": "verb (godan)", "anchor": "kitchen/rice-cooker"}, {"title": "ひどい", "sub": "ひどい", "en": "terrible; awful", "note": "i-adjective", "anchor": "kitchen/rice-cooker"}, {"title": "びっくりする", "sub": "びっくりする", "en": "to be surprised", "note": "verb (suru)", "anchor": "kitchen/rice-cooker"}, {"title": "飲む", "sub": "のむ", "en": "to drink", "note": "verb (godan)", "anchor": "kitchen/tea-kettle"}, {"title": "うるさい", "sub": "うるさい", "en": "noisy; loud", "note": "i-adjective", "anchor": "kitchen/tea-kettle"}, {"title": "飲み放題", "sub": "のみほうだい", "en": "all-you-can-drink", "note": "noun", "anchor": "kitchen/tea-kettle"}, {"title": "行く", "sub": "いく", "en": "to go", "note": "verb (godan; irregular て-form 行って)", "anchor": "garden/torii-gate"}, {"title": "来る", "sub": "くる", "en": "to come", "note": "verb (irregular)", "anchor": "garden/torii-gate"}, {"title": "入る", "sub": "はいる", "en": "to enter", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "泳ぐ", "sub": "およぐ", "en": "to swim", "note": "verb (godan)", "anchor": "garden/koi-pond"}, {"title": "湖", "sub": "みずうみ", "en": "lake (freshwater; NOT the sea 海)", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "咲く", "sub": "さく", "en": "to bloom", "note": "verb (godan)", "anchor": "garden/koi-pond"}, {"title": "天気", "sub": "てんき", "en": "weather", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "季節", "sub": "きせつ", "en": "season", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "黄緑", "sub": "きみどり", "en": "light green; yellow-green", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "見せる", "sub": "みせる", "en": "to show; to present (〜に見せる)", "note": "verb (ichidan)", "anchor": "garden/stone-lantern"}, {"title": "見つける", "sub": "みつける", "en": "to find", "note": "verb (ichidan)", "anchor": "garden/stone-lantern"}, {"title": "急ぐ", "sub": "いそぐ", "en": "to hurry", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "座る", "sub": "すわる", "en": "to sit", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "届く", "sub": "とどく", "en": "to arrive; to be delivered (intransitive; takes が)", "note": "verb (godan)", "anchor": "garden/bamboo-fence"}, {"title": "届ける", "sub": "とどける", "en": "to deliver (transitive; takes を)", "note": "verb (ichidan)", "anchor": "garden/bamboo-fence"}, {"title": "出張", "sub": "しゅっちょう", "en": "business trip", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "特急", "sub": "とっきゅう", "en": "limited express (train)", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "自転車", "sub": "じてんしゃ", "en": "bicycle", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "書く", "sub": "かく", "en": "to write", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "読む", "sub": "よむ", "en": "to read", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "聞く", "sub": "きく", "en": "to listen; to ask", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "話す", "sub": "はなす", "en": "to speak; to talk", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "学ぶ", "sub": "まなぶ", "en": "to learn", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "覚える", "sub": "おぼえる", "en": "to remember; to memorize", "note": "verb (ichidan)", "anchor": "study/writing-desk"}, {"title": "分かる", "sub": "わかる", "en": "to understand", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "難しい", "sub": "むずかしい", "en": "difficult", "note": "i-adjective", "anchor": "study/bookshelf"}, {"title": "簡単な", "sub": "かんたんな", "en": "easy; simple", "note": "na-adjective", "anchor": "study/bookshelf"}, {"title": "趣味", "sub": "しゅみ", "en": "hobby", "note": "noun", "anchor": "study/bookshelf"}, {"title": "働く", "sub": "はたらく", "en": "to work", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "開発する", "sub": "かいはつする", "en": "to develop", "note": "verb (suru)", "anchor": "study/bookshelf"}, {"title": "比べる", "sub": "くらべる", "en": "to compare (two concrete things)", "note": "verb (ichidan)", "anchor": "study/bookshelf"}, {"title": "比較する", "sub": "ひかくする", "en": "to compare (formal; analysis)", "note": "verb (suru)", "anchor": "study/bookshelf"}, {"title": "する", "sub": "する", "en": "to do", "note": "verb (irregular)", "anchor": "study/ink-stone"}, {"title": "始める", "sub": "はじめる", "en": "to start (something)", "note": "verb (ichidan)", "anchor": "study/ink-stone"}, {"title": "かかる", "sub": "かかる", "en": "to take (time); to cost", "note": "verb (godan)", "anchor": "study/ink-stone"}, {"title": "て形の作り方", "sub": "grammar", "en": "The て-form factory. Godan verbs get a coupling clamped on by ending: う/つ/る take the って snap-clamp; む/ぶ/ぬ sink into the んで mud-coupler; く becomes いて (a kite); ぐ becomes いで; す becomes して. 行く is the VIP exception car: 行っ...", "note": "godan: う/つ/る→って · む/ぶ/ぬ→んで · く→いて · ぐ→いで · す→して · exception 行く→行って | ichidan: 〜る→〜て | す...", "anchor": "garden/torii-gate"}, {"title": "〜て（連結）", "sub": "grammar", "en": "Chain actions with て: each verb-car couples to the next and the tense rides only on the LAST verb. The palace route itself is the sentence: 起きて、入って、食べて、出て、勉強します。", "note": "verb-て + verb-て + … + final verb (tense)", "anchor": "garden/torii-gate"}, {"title": "〜てから", "sub": "grammar", "en": "Ticket-gate order: the first action must FULLY pass through before the next begins. てから = after doing ~ (strict sequence).", "note": "verb-て + から", "anchor": "garden/torii-gate"}, {"title": "〜ている", "sub": "grammar", "en": "A car parked inside the gate with its engine still running: an ongoing action or a resulting state. 泳いでいます = is swimming (right now); 結婚しています = is married (state).", "note": "verb-て + いる", "anchor": "garden/torii-gate"}, {"title": "〜てみる", "sub": "grammar", "en": "Try it and SEE (みる = to see): hold the action up to the lantern light to test it. てみる = try doing ~ (and see how it goes).", "note": "verb-て + みる", "anchor": "garden/stone-lantern"}, {"title": "〜てしまう", "sub": "grammar", "en": "The lantern lies SMASHED on the ground: an action completed with regret, or finished completely and irreversibly. てしまう = end up doing / do it all.", "note": "verb-て + しまう", "anchor": "garden/stone-lantern"}, {"title": "〜たり〜たりする", "sub": "grammar", "en": "The lantern flickers between two states: sometimes bright, sometimes dim. たり lists example actions, non-exhaustive — do things like ~ and ~.", "note": "verb-たり + verb-たり + する", "anchor": "garden/stone-lantern"}, {"title": "〜か", "sub": "grammar", "en": "The kana か is shaped like a HOOK: hang it on the end of any statement and it swings the sentence up into a question. No word-order change needed.", "note": "statement + か (rising intonation in casual speech)", "anchor": "study/writing-desk"}, {"title": "疑問詞", "sub": "grammar", "en": "Five pigeonholes on the desk, one per question word: 何 what (a box), どこ where (a map pin), いつ when (a clock), だれ who (a silhouette), どう how (a toolbox). The question word stays IN the sentence where the answer would g...", "note": "Q-word in place of the unknown + か | 何＝what · どこ＝where · いつ＝when · だれ＝who · どう＝how · どの...", "anchor": "study/writing-desk"}, {"title": "〜てもいいですか", "sub": "grammar", "en": "Permission window at the desk: you slide your て-form action under the glass and the clerk stamps いいですよ. てもいいですか = may I ~? Bridge card: て-form + question in one move.", "note": "verb-て + もいいですか | answer: はい、いいですよ / だめです", "anchor": "study/writing-desk"}, {"title": "〜てくれる？", "sub": "grammar", "en": "A gift handed DOWN to you across the desk: someone does the action for your benefit. てくれる = they do ~ for me; as a casual request: てくれる？ / more polite: てもらえますか.", "note": "verb-て + くれる / もらう | request: 〜てくれる？ → 〜てもらえますか (politer)", "anchor": "study/writing-desk"}, {"title": "どれ・どっち", "sub": "grammar", "en": "Two books or a whole shelf? どっち chooses between TWO things (どちら casual); どれ picks from THREE or more. The shelf holds many books (どれ); the scale compares two (どっち).", "note": "AとBでは、どっちが〜 | どれが好きですか", "anchor": "study/bookshelf"}, {"title": "〜れる／〜られる", "sub": "grammar", "en": "Potential form: can do. The gate's second machine swaps a car's engine instead of adding a clamp: godan cars get the える engine (飲む→飲める, 走る→走れる); ichidan stretch to られる (食べる→食べられる); VIP cars: する→できる, 来る→来（こ）られる. Trap: ...", "note": "godan: う-row→え-row + る (行く→行ける) | ichidan: る→られる | する→できる · 来る→来られる", "anchor": "garden/torii-gate"}, {"title": "選ぶ", "sub": "えらぶ", "en": "to choose", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "飛ぶ", "sub": "とぶ", "en": "to fly; to jump", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "歩く", "sub": "あるく", "en": "to walk", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "撮る", "sub": "とる", "en": "to take (a photo)", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "言う", "sub": "いう", "en": "to say", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "引退する", "sub": "いんたいする", "en": "to retire (from sport)", "note": "verb (suru)", "anchor": "study/ink-stone"}, {"title": "資格", "sub": "しかく", "en": "qualification; license", "note": "noun", "anchor": "study/bookshelf"}, {"title": "必要", "sub": "ひつよう", "en": "necessary; needed", "note": "na-adjective / noun", "anchor": "study/bookshelf"}, {"title": "骨折", "sub": "こっせつ", "en": "bone fracture", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "半分", "sub": "はんぶん", "en": "half", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "筋肉痛", "sub": "きんにくつう", "en": "muscle pain; sore muscles", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "かかと", "sub": "かかと", "en": "heel", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "脳", "sub": "のう", "en": "brain", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "医者", "sub": "いしゃ", "en": "doctor", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "レントゲン", "sub": "レントゲン", "en": "X-ray", "note": "noun", "anchor": "bath/wooden-tub"}];
+const PARAMS = new URLSearchParams(location.search);
+
+// ---------- renderer / scene / camera ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x10141c); // night blue
+scene.fog = new THREE.Fog(0x10141c, 16, 36);
+
+const camera = new THREE.PerspectiveCamera(66, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 1.6, 4.2);
+
+const controls = new PointerLockControls(camera, renderer.domElement);
+const enterEl = document.getElementById('enter');
+enterEl.addEventListener('click', () => controls.lock());
+controls.addEventListener('lock', () => enterEl.style.display = 'none');
+controls.addEventListener('unlock', () => enterEl.style.display = 'flex');
+if (PARAMS.has('shot')) { // headless verification mode
+  enterEl.style.display = 'none';
+  const c = (PARAMS.get('cam') || '0,1.6,4.2').split(',').map(Number);
+  const l = (PARAMS.get('look') || '0,1.2,-2').split(',').map(Number);
+  camera.position.set(...c); camera.lookAt(...l);
+}
+
+// ---------- lighting: lantern-led night scene ----------
+scene.add(new THREE.HemisphereLight(0x35405a, 0x1a140e, 0.35));      // faint moonlit base
+const moon = new THREE.DirectionalLight(0x8fa8d0, 0.35);             // cool moonlight
+moon.position.set(-8, 14, -6); moon.castShadow = true;
+moon.shadow.mapSize.set(2048, 2048);
+moon.shadow.camera.left = -18; moon.shadow.camera.right = 18;
+moon.shadow.camera.top = 18; moon.shadow.camera.bottom = -18;
+scene.add(moon);
+
+function pointGlow(x, y, z, color = 0xffb96a, intensity = 14, dist = 9) {
+  const l = new THREE.PointLight(color, intensity, dist, 1.8);
+  l.position.set(x, y, z); scene.add(l); return l;
+}
+
+// ---------- shared materials ----------
+const M = {
+  woodDark:  new THREE.MeshStandardMaterial({ color: 0x5a3d24, roughness: .8 }),
+  woodMid:   new THREE.MeshStandardMaterial({ color: 0x8a5f38, roughness: .75 }),
+  woodLight: new THREE.MeshStandardMaterial({ color: 0xb98a56, roughness: .7 }),
+  plaster:   new THREE.MeshStandardMaterial({ color: 0xcfc0a8, roughness: .95 }),
+  tatami:    new THREE.MeshStandardMaterial({ color: 0xa8a063, roughness: .95 }),
+  tatamiEdge:new THREE.MeshStandardMaterial({ color: 0x3a5c46, roughness: .95 }),
+  grass:     new THREE.MeshStandardMaterial({ color: 0x39512e, roughness: 1 }),
+  stone:     new THREE.MeshStandardMaterial({ color: 0x8d8d85, roughness: .9 }),
+  stoneDark: new THREE.MeshStandardMaterial({ color: 0x5c5c56, roughness: .95 }),
+  red:       new THREE.MeshStandardMaterial({ color: 0xb03a2a, roughness: .6 }),
+  white:     new THREE.MeshStandardMaterial({ color: 0xf0ead8, roughness: .9 }),
+  iron:      new THREE.MeshStandardMaterial({ color: 0x2e2a26, roughness: .4, metalness: .7 }),
+  water:     new THREE.MeshStandardMaterial({ color: 0x2f6f7f, transparent: true, opacity: .85, roughness: .12 }),
+  chochin:   new THREE.MeshStandardMaterial({ color: 0xf5e0b8, emissive: 0xbb7a28, emissiveIntensity: .9, roughness: .8 }),
+  leaf:      new THREE.MeshStandardMaterial({ color: 0x2d4a24, roughness: 1 }),
+  mapleLeaf: new THREE.MeshStandardMaterial({ color: 0x8a3a22, roughness: 1 }),
+};
+function box(w, h, d, mat, x, y, z, parent = scene, shadow = true) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = shadow; m.receiveShadow = true;
+  parent.add(m); return m;
+}
+function cyl(rt, rb, h, mat, x, y, z, parent = scene, seg = 16) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
+  parent.add(m); return m;
+}
+function ball(r, mat, x, y, z, parent = scene, squashY = 1) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 9), mat);
+  m.scale.y = squashY; m.position.set(x, y, z);
+  m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+}
+// hanging paper lantern (chochin) with light
+function chochinLantern(x, y, z, scale = 1, glow = true) {
+  const g = new THREE.Group();
+  cyl(0.02, 0.02, 1.0, M.iron, 0, 0.5 + 0.4 * scale, 0, g, 6);           // cord
+  const body = cyl(0.22 * scale, 0.26 * scale, 0.55 * scale, M.chochin, 0, 0, 0, g, 14);
+  cyl(0.26 * scale, 0.24 * scale, 0.06, M.woodDark, 0, 0.3 * scale, 0, g, 14);
+  cyl(0.24 * scale, 0.26 * scale, 0.06, M.woodDark, 0, -0.3 * scale, 0, g, 14);
+  g.position.set(x, y, z); scene.add(g);
+  if (glow) pointGlow(x, y - 0.1, z, 0xffc070, 12, 7);
+  return g;
+}
+// small stone lantern with glow
+function stoneLanternAt(x, z, s = 1) {
+  const g = new THREE.Group();
+  cyl(0.3 * s, 0.42 * s, 0.4 * s, M.stone, 0, 0.2 * s, 0, g);
+  cyl(0.12 * s, 0.12 * s, 0.6 * s, M.stone, 0, 0.7 * s, 0, g);
+  box(0.5 * s, 0.36 * s, 0.5 * s, M.stone, 0, 1.2 * s, 0, g);
+  const win = box(0.52 * s, 0.2 * s, 0.2 * s, M.chochin, 0, 1.2 * s, 0, g, false);
+  box(0.7 * s, 0.14 * s, 0.7 * s, M.stoneDark, 0, 1.46 * s, 0, g);
+  g.position.set(x, 0, z); scene.add(g);
+  pointGlow(x, 1.2 * s, z, 0xffc070, 8, 5);
+  return g;
+}
+
+// ---------- floors ----------
+function floorRect(cx, cz, w, d, mat, slats = false) {
+  if (!slats) { box(w, 0.1, d, mat, cx, -0.05, cz, scene, false).receiveShadow = true; return; }
+  const n = Math.floor(w / 0.8);
+  for (let i = 0; i < n; i++)
+    box(0.76, 0.1, d, i % 2 ? M.woodMid : M.woodDark, cx - w / 2 + 0.4 + i * 0.8, -0.05, cz, scene, false);
+}
+floorRect(0, 0, 10.9, 10.9, M.grass);            // garden
+floorRect(-9.5, 0, 8, 8, M.tatami);              // bedroom
+// tatami border stripes
+for (const dz of [-2.6, 0, 2.6]) box(8, 0.11, 0.08, M.tatamiEdge, -9.5, -0.045, dz, scene, false);
+floorRect(0, 9.5, 8, 8, M.woodMid, true);        // bath
+floorRect(9.5, 0, 8, 8, M.woodMid, true);        // kitchen
+floorRect(0, -9.5, 8, 8, M.woodDark, true);      // study
+
+// ---------- walls (with collision) ----------
+const colliders = [];
+function wallSeg(x1, z1, x2, z2, h = 3.4) {
+  const w = Math.max(Math.abs(x2 - x1), 0.24), d = Math.max(Math.abs(z2 - z1), 0.24);
+  box(w, h, d, M.plaster, (x1 + x2) / 2, h / 2, (z1 + z2) / 2);
+  colliders.push({ minX: (x1 + x2) / 2 - w / 2, maxX: (x1 + x2) / 2 + w / 2,
+                   minZ: (z1 + z2) / 2 - d / 2, maxZ: (z1 + z2) / 2 + d / 2 });
+}
+wallSeg(-13.7, -13.7, 13.7, -13.45); wallSeg(-13.7, 13.45, 13.7, 13.7);
+wallSeg(-13.7, -13.7, -13.45, 13.7); wallSeg(13.45, -13.7, 13.7, 13.7);
+wallSeg(-13.7, -5.6, -1.2, -5.35); wallSeg(1.2, -5.6, 13.7, -5.35);
+wallSeg(-13.7, 5.35, -1.2, 5.6); wallSeg(1.2, 5.35, 13.7, 5.6);
+wallSeg(-5.6, -13.7, -5.35, -1.2); wallSeg(-5.6, 1.2, -5.35, 13.7);
+wallSeg(5.35, -13.7, 5.6, -1.2); wallSeg(5.6, 1.2, 5.35, 13.7);
+
+// ═══════════ GARDEN ═══════════
+const torii = new THREE.Group();
+cyl(0.16, 0.2, 3.2, M.red, -1.5, 1.6, 0, torii); cyl(0.16, 0.2, 3.2, M.red, 1.5, 1.6, 0, torii);
+box(4.2, 0.3, 0.4, M.red, 0, 3.3, 0, torii); box(3.4, 0.22, 0.3, M.red, 0, 2.7, 0, torii);
+torii.position.set(0, 0, 5.45); scene.add(torii);
+pointGlow(0, 2.6, 5.0, 0xff8055, 10, 6); // warm wash on the gate
+// koi pond + koi
+cyl(1.6, 1.7, 0.25, M.stone, -2.6, 0.12, -1.6);
+const pondWater = new THREE.Mesh(new THREE.CircleGeometry(1.5, 28), M.water);
+pondWater.rotation.x = -Math.PI / 2; pondWater.position.set(-2.6, 0.27, -1.6); scene.add(pondWater);
+// lotus leaves (card rests live here)
+const lotusPos = [];
+for (let i = 0; i < 6; i++) {
+  const a = i * 1.05 + 0.4, r = 0.95;
+  const lx = -2.6 + Math.cos(a) * r, lz = -1.6 + Math.sin(a) * r;
+  const leaf = cyl(0.3, 0.3, 0.03, new THREE.MeshStandardMaterial({ color: 0x3f7a3a, roughness: .9 }), lx, 0.3, lz, scene, 10);
+  lotusPos.push([lx, 0.34, lz]);
+}
+const koi = [];
+for (let i = 0; i < 3; i++) {
+  const k = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6),
+    new THREE.MeshStandardMaterial({ color: i ? 0xe07830 : 0xf0f0e8 }));
+  k.scale.set(1.8, 0.6, 0.8); scene.add(k); koi.push(k);
+}
+// main stone lantern (card anchor) + two decorative ones
+stoneLanternAt(2.6, -1.6, 1.15);
+stoneLanternAt(-4.3, 3.8, 0.9); stoneLanternAt(4.3, 4.4, 0.9);
+// stepping-stone path: torii -> pond -> study door
+const pathStones = [[0, 4.6], [-0.6, 3.6], [-1.4, 2.6], [-2.0, 1.4], [-1.2, 0.2], [-0.4, -1.0], [0, -2.4], [0, -3.8], [0, -4.8]];
+for (const [px, pz] of pathStones) cyl(0.34, 0.38, 0.08, M.stoneDark, px, 0.04, pz, scene, 9);
+// rocks & bushes & maple tree
+ball(0.5, M.stoneDark, -4.4, 0.25, -3.9, scene, 0.7); ball(0.3, M.stone, -3.9, 0.15, -4.3, scene, 0.8);
+ball(0.55, M.leaf, 4.3, 0.4, -3.6); ball(0.4, M.leaf, 3.7, 0.3, -4.2); ball(0.45, M.leaf, -4.5, 0.35, 0.5);
+cyl(0.12, 0.18, 1.6, M.woodDark, -4.2, 0.8, -4.5, scene, 8);
+ball(0.9, M.mapleLeaf, -4.2, 2.0, -4.5); ball(0.6, M.mapleLeaf, -3.6, 1.7, -4.3); ball(0.55, M.mapleLeaf, -4.7, 1.75, -4.2);
+// bamboo fence + chochin string along it
+for (let i = 0; i < 12; i++) cyl(0.05, 0.05, 1.4, M.tatami, 4.6, 0.7, -0.5 + i * 0.35);
+box(0.08, 0.08, 4.2, M.woodDark, 4.6, 1.1, 1.4); box(0.08, 0.08, 4.2, M.woodDark, 4.6, 0.45, 1.4);
+for (let i = 0; i < 3; i++) chochinLantern(4.35, 2.2, 0.2 + i * 1.3, 0.7, i === 1);
+
+// ═══════════ BEDROOM ═══════════
+box(2.0, 0.28, 1.2, M.white, -10.5, 0.14, 1.2);                       // futon
+box(0.6, 0.18, 0.4, M.white, -10.9, 0.36, 0.9);                       // pillow
+ball(0.35, new THREE.MeshStandardMaterial({ color: 0xa04038, roughness: .9 }), -8.6, 0.1, 0.6, scene, 0.35); // zabuton
+chochinLantern(-8, 2.4, -2, 1.0);                                     // the paper lantern anchor
+box(1.6, 2.0, 0.8, M.woodDark, -12.6, 1.0, -2.5);                     // tansu chest
+for (let i = 0; i < 3; i++) box(1.4, 0.06, 0.06, M.woodLight, -12.6, 0.5 + i * 0.55, -2.08);
+box(1.0, 0.4, 0.7, M.woodDark, -7.2, 0.2, 1.8);                       // low table
+cyl(0.09, 0.11, 0.14, M.stoneDark, -7.2, 0.47, 1.8, scene, 10);       // tea cup
+pointGlow(-9.5, 2.6, 0, 0xffc070, 8, 8);
+
+// ═══════════ BATH ═══════════
+const tub = new THREE.Group();
+const tubWall = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.28, 1.0, 24, 1, true), M.woodLight);
+tubWall.position.y = 0.55; tubWall.castShadow = true;
+cyl(1.28, 1.28, 0.1, M.woodMid, 0, 0.08, 0, tub, 24);
+const tubWater = new THREE.Mesh(new THREE.CircleGeometry(1.3, 32), M.water);
+tubWater.rotation.x = -Math.PI / 2; tubWater.position.y = 0.95; tub.add(tubWater);
+for (const y of [0.25, 0.9]) {
+  const band = new THREE.Mesh(new THREE.TorusGeometry(y === 0.25 ? 1.34 : 1.42, 0.035, 8, 32), M.iron);
+  band.rotation.x = Math.PI / 2; band.position.y = y; tub.add(band);
+}
+tub.add(tubWall); tub.position.set(-1.4, 0, 9); scene.add(tub);
+// steam
+function steamTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(32, 32, 2, 32, 32, 30);
+  grad.addColorStop(0, 'rgba(255,255,255,.5)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+const steamCount = 70;
+const steamGeo = new THREE.BufferGeometry();
+const steamPos = new Float32Array(steamCount * 3); const steamSeed = new Float32Array(steamCount);
+for (let i = 0; i < steamCount; i++) {
+  const r = Math.random() * 1.1, a = Math.random() * Math.PI * 2;
+  steamPos.set([Math.cos(a) * r, 1 + Math.random() * 2.4, Math.sin(a) * r], i * 3);
+  steamSeed[i] = Math.random() * 100;
+}
+steamGeo.setAttribute('position', new THREE.BufferAttribute(steamPos, 3));
+const steam = new THREE.Points(steamGeo, new THREE.PointsMaterial({
+  map: steamTexture(), size: 0.65, transparent: true, opacity: .45, depthWrite: false,
+  blending: THREE.AdditiveBlending }));
+steam.position.set(-1.4, 0, 9); scene.add(steam);
+// towel rack (cards hang AS towels)
+const rack = new THREE.Group();
+for (const x of [-0.9, 0.9]) cyl(0.05, 0.05, 1.8, M.woodDark, x, 0.9, 0, rack, 10);
+const rackBar = cyl(0.04, 0.04, 1.9, M.woodMid, 0, 1.75, 0, rack, 10); rackBar.rotation.z = Math.PI / 2;
+rack.position.set(2, 0, 11.3); rack.rotation.y = -0.4; scene.add(rack);
+// bath props: stool, bucket, mirror
+cyl(0.3, 0.34, 0.3, M.woodLight, 0.4, 0.15, 11.8, scene, 12);
+cyl(0.28, 0.24, 0.36, M.woodLight, 0.9, 0.18, 12.2, scene, 12);
+box(1.2, 1.6, 0.06, new THREE.MeshStandardMaterial({ color: 0x9fb8c0, roughness: .1, metalness: .6 }), -3.9, 1.4, 11.5);
+chochinLantern(0, 3.0, 9.5, 1.1);
+
+// ═══════════ KITCHEN ═══════════
+box(3.0, 0.9, 1.0, M.woodMid, 9, 0.45, -2.8);                          // counter
+box(0.9, 0.06, 0.6, M.woodLight, 9, 0.93, -2.7);                       // cutting board
+box(0.5, 0.04, 0.08, M.iron, 8.6, 0.97, -2.6);                         // knife
+box(3.0, 0.8, 0.08, M.woodDark, 9, 1.35, -3.32);                       // backsplash shelf
+for (let i = 0; i < 3; i++) cyl(0.12, 0.12, 0.3, new THREE.MeshStandardMaterial({ color: [0xa04038, 0x38608a, 0xc09038][i], roughness: .7 }), 8.2 + i * 0.4, 1.55, -3.3, scene, 10); // jars
+cyl(0.4, 0.34, 0.55, M.white, 12, 0.28, 1.5);                          // rice cooker
+cyl(0.42, 0.42, 0.08, M.iron, 12, 0.6, 1.5);
+box(1.2, 0.75, 0.8, M.woodDark, 7, 0.37, 1.5);                         // low table
+cyl(0.28, 0.34, 0.4, M.iron, 7, 1.12, 1.5);                            // kettle
+const spout = cyl(0.04, 0.06, 0.35, M.iron, 7.3, 1.25, 1.5); spout.rotation.z = -0.7;
+cyl(0.03, 0.03, 1.4, M.iron, 7, 1.85, 1.5, scene, 8).rotation.z = Math.PI / 2; // hook rail above table
+// pan rail on wall
+for (let i = 0; i < 3; i++) {
+  cyl(0.16, 0.16, 0.06, M.iron, 10.5 + i * 0.5, 1.7, -3.28, scene, 12).rotation.x = Math.PI / 2;
+}
+chochinLantern(9.5, 3.0, 0, 1.1);
+
+// ═══════════ STUDY ═══════════
+box(1.8, 0.08, 0.9, M.woodDark, 0, 0.75, -9.8);                        // desk top
+for (const [dx, dz] of [[-0.8, -0.35], [0.8, -0.35], [-0.8, 0.35], [0.8, 0.35]])
+  box(0.08, 0.75, 0.08, M.woodDark, dx, 0.37, -9.8 + dz);
+box(0.3, 0.06, 0.2, M.stone, 0.5, 0.82, -9.8);                         // ink stone
+cyl(0.07, 0.09, 0.12, M.stoneDark, -0.5, 0.85, -9.7, scene, 10);       // tea cup on desk
+// desk lamp
+cyl(0.04, 0.04, 0.5, M.iron, -0.7, 1.0, -10.1, scene, 8);
+ball(0.12, M.chochin, -0.7, 1.3, -10.1, scene, 0.8);
+pointGlow(-0.7, 1.35, -10.1, 0xffd090, 8, 4);
+// hanging scroll
+box(0.7, 1.6, 0.04, M.white, 1.8, 1.9, -13.35);
+box(0.8, 0.06, 0.06, M.woodDark, 1.8, 2.72, -13.35);
+const shelf = new THREE.Group();
+box(2.2, 2.4, 0.4, M.woodDark, 0, 1.2, 0, shelf);
+const bookCols = [0xa04038, 0x38608a, 0x5f8a48, 0xc09038, 0x7a4a88];
+for (let s = 0; s < 4; s++) for (let b = 0; b < 7; b++) {
+  if (Math.random() < 0.15) continue;
+  box(0.16, 0.42, 0.28, new THREE.MeshStandardMaterial({ color: bookCols[(s + b) % 5], roughness: .85 }),
+    -0.85 + b * 0.28, 0.45 + s * 0.55, 0.22, shelf, false);
+}
+shelf.position.set(-2.8, 0, -12.9); scene.add(shelf);
+chochinLantern(0, 3.0, -11.5, 1.1);
+
+// ---------- card textures ----------
+function cardTexture(title, sub, back) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 320;
+  const g = c.getContext('2d');
+  g.fillStyle = back ? '#2b3a42' : '#f7efdd';
+  g.beginPath(); g.roundRect(0, 0, 512, 320, 28); g.fill();
+  g.strokeStyle = back ? '#8fd0c8' : '#8a5f38'; g.lineWidth = 10; g.stroke();
+  g.textAlign = 'center'; g.fillStyle = back ? '#bfe8e0' : '#3a2a1a';
+  if (back) {
+    g.font = '600 40px "Avenir Next", sans-serif';
+    wrapText(g, title, 256, 90, 440, 48, 4);
+    g.font = '400 28px "Avenir Next", sans-serif'; g.fillStyle = '#8fd0c8';
+    wrapText(g, sub, 256, 268, 460, 32, 1);
+  } else {
+    const len = [...title].length;
+    g.font = `600 ${len > 7 ? 56 : len > 4 ? 78 : 104}px "Hiragino Sans", sans-serif`;
+    g.fillText(title, 256, 165);
+    g.font = '400 46px "Hiragino Sans", sans-serif'; g.fillStyle = '#8a5f38';
+    g.fillText(sub, 256, 255);
+  }
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t;
+}
+function wrapText(g, text, x, y, maxW, lh, maxLines = 5) {
+  const words = String(text).split(' '); let line = '', lines = [];
+  for (const w of words) {
+    if (g.measureText(line + w).width > maxW && line) { lines.push(line); line = ''; }
+    line += w + ' ';
+  }
+  lines.push(line);
+  lines.slice(0, maxLines).forEach((l, i) => g.fillText(l.trim(), x, y + i * lh));
+}
+
+// ---------- creative placement: cards attached to objects ----------
+// styles: flat (lying), hang (vertical, fixed ry), ema (swinging plaques),
+//         towel (the rack towels themselves), spine (book spines), cam (fallback)
+const SLOTS = {
+  'bedroom/futon': { style: 'flat', s: 0.75, slots: [
+    { p: [-10.85, 0.33, 1.0] }, { p: [-10.2, 0.33, 1.0] },
+    { p: [-10.85, 0.33, 1.55] }, { p: [-10.2, 0.33, 1.55] } ] },
+  'bedroom/paper-lantern': { style: 'hang', s: 0.55, slots: [
+    { p: [-8.5, 1.9, -2], ry: 0.3 }, { p: [-8, 1.55, -2.15], ry: -0.2 }, { p: [-7.5, 2.0, -1.9], ry: 0.5 } ] },
+  'bedroom/tansu-chest': { style: 'hang', s: 0.6, slots: [
+    { p: [-12.95, 0.55, -2.07], ry: 0 }, { p: [-12.25, 0.55, -2.07], ry: 0 },
+    { p: [-12.95, 1.1, -2.07], ry: 0 }, { p: [-12.25, 1.1, -2.07], ry: 0 },
+    { p: [-12.95, 1.65, -2.07], ry: 0 }, { p: [-12.25, 1.65, -2.07], ry: 0 } ] },
+  'bath/wooden-tub': { style: 'flat', s: 0.6, slots: [
+    { p: [-1.8, 0.99, 8.6] }, { p: [-1.0, 0.99, 8.8] }, { p: [-1.5, 0.99, 9.5] } ] },
+  'bath/towel-rack': { style: 'towel', s: 1, slots: [
+    { p: [1.45, 1.22, 11.07], ry: -0.4 }, { p: [2, 1.22, 11.3], ry: -0.4 }, { p: [2.55, 1.22, 11.53], ry: -0.4 } ] },
+  'kitchen/cutting-board': { style: 'flat', s: 0.55, slots: [
+    { p: [8.75, 0.98, -2.75] }, { p: [9.25, 0.98, -2.7] }, { p: [9.0, 0.98, -2.45] },
+    { p: [10.1, 1.36, -3.27], ry: 0, upright: true } ] },
+  'kitchen/rice-cooker': { style: 'hang', s: 0.42, slots: [
+    { p: [11.82, 0.35, 1.94], ry: 0 }, { p: [12.18, 0.35, 1.94], ry: 0 },
+    { p: [11.82, 0.78, 1.94], ry: 0 }, { p: [12.18, 0.78, 1.94], ry: 0 } ] },
+  'kitchen/tea-kettle': { style: 'hang', s: 0.5, slots: [
+    { p: [6.65, 1.55, 1.5], ry: 0.4 }, { p: [7, 1.5, 1.62], ry: 0 }, { p: [7.35, 1.55, 1.5], ry: -0.4 } ] },
+  'garden/torii-gate': { style: 'ema', s: 0.62, slots: [
+    { p: [-1.35, 2.3, 5.45], ry: 0 }, { p: [-0.9, 2.3, 5.45], ry: 0 }, { p: [-0.45, 2.3, 5.45], ry: 0 },
+    { p: [0, 2.3, 5.45], ry: 0 }, { p: [0.45, 2.3, 5.45], ry: 0 }, { p: [0.9, 2.3, 5.45], ry: 0 },
+    { p: [1.35, 2.3, 5.45], ry: 0 } ] },
+  'garden/koi-pond': { style: 'flat', s: 0.5, slots: lotusPos.map(p => ({ p })) },
+  'garden/stone-lantern': { style: 'hang', s: 0.5, slots: [
+    { p: [2.95, 0.95, -1.45], ry: 0.8 }, { p: [2.25, 1.15, -1.45], ry: -0.8 }, { p: [2.6, 1.35, -1.2], ry: 0 },
+    { p: [2.95, 1.55, -1.75], ry: 2.4 }, { p: [2.25, 1.75, -1.75], ry: -2.4 }, { p: [2.6, 1.95, -1.35], ry: 3.14 },
+    { p: [2.9, 2.1, -1.6], ry: 1.6 } ] },
+  'garden/bamboo-fence': { style: 'hang', s: 0.6, slots: [
+    { p: [4.5, 0.85, 0.1], ry: -Math.PI / 2 }, { p: [4.5, 0.85, 0.8], ry: -Math.PI / 2 },
+    { p: [4.5, 0.85, 1.5], ry: -Math.PI / 2 }, { p: [4.5, 0.85, 2.2], ry: -Math.PI / 2 },
+    { p: [4.5, 0.85, 2.9], ry: -Math.PI / 2 } ] },
+  'study/writing-desk': { style: 'flat', s: 0.5, slots: [
+    { p: [-0.6, 0.8, -9.9] }, { p: [-0.25, 0.8, -9.75] }, { p: [-0.5, 0.8, -9.55] },
+    { p: [0.1, 0.8, -9.95] }, { p: [0.15, 0.8, -9.6] }, { p: [-0.1, 0.8, -9.45] },
+    { p: [0.75, 0.82, -9.5], ry: 0.5, upright: true }, { p: [0.75, 0.82, -10.05], ry: -0.4, upright: true },
+    { p: [-0.85, 0.82, -9.5], ry: 0.9, upright: true }, { p: [0.35, 0.82, -10.15], ry: 0.1, upright: true } ] },
+  'study/bookshelf': { style: 'spine', s: 1, slots: [
+    { p: [-3.55, 1.0, -12.65], ry: 0 }, { p: [-3.3, 1.0, -12.65], ry: 0 }, { p: [-3.05, 1.0, -12.65], ry: 0 },
+    { p: [-2.8, 1.0, -12.65], ry: 0 }, { p: [-2.55, 1.0, -12.65], ry: 0 },
+    { p: [-3.55, 1.55, -12.65], ry: 0 }, { p: [-3.3, 1.55, -12.65], ry: 0 }, { p: [-3.05, 1.55, -12.65], ry: 0 },
+    { p: [-2.8, 1.55, -12.65], ry: 0 } ] },
+  'study/ink-stone': { style: 'hang', s: 0.38, slots: [
+    { p: [0.35, 0.88, -9.65], ry: 0.6 }, { p: [0.65, 0.88, -9.7], ry: -0.5 }, { p: [0.5, 0.88, -9.95], ry: 3.1 } ] },
+};
+const FALLBACK = { pos: [0, 2.2, 0], r: 3.0 };
+
+const byAnchor = {};
+for (const c of CARDS) (byAnchor[c.anchor] ??= []).push(c);
+const flipCards = [], emaCards = [], towelCards = [], camCards = [];
+for (const [anchor, cards] of Object.entries(byAnchor)) {
+  const spec = SLOTS[anchor];
+  cards.forEach((c, i) => {
+    const front = cardTexture(c.title, c.sub, false);
+    const back = cardTexture(c.en, c.note || '', true);
+    let mesh, style = 'cam', baseY = 0;
+    if (spec && i < spec.slots.length) {
+      const slot = spec.slots[i];
+      style = slot.upright ? 'hang' : spec.style;
+      const w = spec.style === 'spine' ? 0.22 : 0.8 * (spec.s || 1);
+      const h = spec.style === 'spine' ? 0.5 : spec.style === 'towel' ? 1.0 : 0.5 * (spec.s || 1);
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+        new THREE.MeshBasicMaterial({ map: front, transparent: true, side: THREE.DoubleSide }));
+      mesh.position.set(...slot.p);
+      baseY = slot.p[1];
+      if (spec.style === 'flat' && !slot.upright) mesh.rotation.x = -Math.PI / 2;
+      else mesh.rotation.y = slot.ry || 0;
+    } else {
+      // overflow: gentle orbit near the anchor
+      const a = spec ? spec.slots[0].p : FALLBACK.pos;
+      const angle = i * 1.3, r = FALLBACK.r * 0.5;
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.44),
+        new THREE.MeshBasicMaterial({ map: front, transparent: true, side: THREE.DoubleSide }));
+      baseY = a[1] + 1.4 + (i % 3) * 0.3;
+      mesh.position.set(a[0] + Math.cos(angle) * r, baseY, a[2] + Math.sin(angle) * r);
+    }
+    mesh.userData = { front, back, flipped: false, baseY, phase: Math.random() * 6.28, style };
+    scene.add(mesh); flipCards.push(mesh);
+    if (style === 'ema') emaCards.push(mesh);
+    if (style === 'towel') towelCards.push(mesh);
+    if (style === 'cam') camCards.push(mesh);
+  });
+}
+
+// ---------- room detection ----------
+const ROOM_INFO = [
+  { test: (x, z) => x < -5.4 && Math.abs(z) < 5.4, ja: '寝室', en: 'Bedroom', rule: 'night & morning — the かう pair lives in the tansu chest' },
+  { test: (x, z) => z > 5.4 && Math.abs(x) < 5.4, ja: 'お風呂', en: 'Bath', rule: 'tub = touch temperature · rack = air temperature' },
+  { test: (x, z) => x > 5.4 && Math.abs(z) < 5.4, ja: '台所', en: 'Kitchen', rule: 'make / use / eat — つくる vs つかう on one board' },
+  { test: (x, z) => z < -5.4 && Math.abs(x) < 5.4, ja: '書斎', en: 'Study', rule: 'the inquiry desk — か the hook, question words, requests' },
+  { test: () => true, ja: '庭園', en: 'Garden', rule: 'the coupling machine — て-form ema plaques hang on the torii beam' },
+];
+const roomEl = document.getElementById('roomName'), ruleEl = document.getElementById('roomRule');
+let lastRoom = '';
+function updateRoom(x, z) {
+  const r = ROOM_INFO.find(r => r.test(x, z));
+  if (r.en !== lastRoom) {
+    lastRoom = r.en;
+    roomEl.innerHTML = `${r.ja} <span>${r.en}</span>`;
+    ruleEl.textContent = r.rule;
+  }
+}
+
+// ---------- movement + collision ----------
+const keys = {};
+addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'KeyE') flipLookedAt(); });
+addEventListener('keyup', e => keys[e.code] = false);
+addEventListener('pointerdown', () => { if (controls.isLocked) flipLookedAt(); });
+
+const vel = new THREE.Vector3();
+const PR = 0.32;
+function collide(p) {
+  for (const c of colliders) {
+    const nx = Math.max(c.minX, Math.min(p.x, c.maxX));
+    const nz = Math.max(c.minZ, Math.min(p.z, c.maxZ));
+    const dx = p.x - nx, dz = p.z - nz, d2 = dx * dx + dz * dz;
+    if (d2 < PR * PR) {
+      if (d2 > 1e-9) {
+        const d = Math.sqrt(d2), push = (PR - d) / d;
+        p.x += dx * push; p.z += dz * push;
+      } else {
+        const pens = [p.x - c.minX + PR, c.maxX - p.x + PR, p.z - c.minZ + PR, c.maxZ - p.z + PR];
+        const m = Math.min(...pens);
+        if (m === pens[0]) p.x = c.minX - PR; else if (m === pens[1]) p.x = c.maxX + PR;
+        else if (m === pens[2]) p.z = c.minZ - PR; else p.z = c.maxZ + PR;
+      }
+    }
+  }
+}
+
+const ray = new THREE.Raycaster(); ray.far = 4;
+function flipLookedAt() {
+  ray.setFromCamera(new THREE.Vector2(0, 0), camera);
+  const hit = ray.intersectObjects(flipCards)[0];
+  if (hit) {
+    const u = hit.object.userData;
+    u.flipped = !u.flipped;
+    hit.object.material.map = u.flipped ? u.back : u.front;
+  }
+}
+
+// ---------- animate ----------
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+
+  if (controls.isLocked) {
+    const speed = keys.ShiftLeft ? 6 : 3.2;
+    const f = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+    const s = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+    vel.set(s, 0, f).normalize().multiplyScalar(speed * dt);
+    controls.moveForward(vel.z);
+    controls.moveRight(vel.x);
+    camera.position.y = 1.6;
+    collide(camera.position);
+    updateRoom(camera.position.x, camera.position.z);
+  }
+
+  tubWater.position.y = 0.95 + Math.sin(t * 1.4) * 0.015;
+  const sp = steam.geometry.attributes.position;
+  for (let i = 0; i < steamCount; i++) {
+    let y = sp.getY(i) + 0.006;
+    if (y > 3.6) y = 1.0;
+    sp.setY(i, y); sp.setX(i, sp.getX(i) + Math.sin(t * 0.6 + steamSeed[i]) * 0.0015);
+  }
+  sp.needsUpdate = true;
+  koi.forEach((k, i) => {
+    const a = t * (0.3 + i * 0.12) + i * 2.1;
+    k.position.set(-2.6 + Math.cos(a) * 0.9, 0.28, -1.6 + Math.sin(a) * 0.9);
+    k.rotation.y = -a;
+  });
+  emaCards.forEach(m => { m.rotation.z = Math.sin(t * 1.3 + m.userData.phase) * 0.09; });
+  towelCards.forEach((m, i) => { m.rotation.x = Math.sin(t * 1.2 + i) * 0.08; });
+  camCards.forEach(m => {
+    m.position.y = m.userData.baseY + Math.sin(t * 1.1 + m.userData.phase) * 0.05;
+    m.lookAt(camera.position.x, m.position.y, camera.position.z);
+  });
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
