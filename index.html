@@ -229,6 +229,17 @@ for (let i = 0; i < 3; i++) {
 }
 // main stone lantern (card anchor) + two decorative ones
 stoneLanternAt(2.6, -1.6, 1.15);
+pointGlow(2.6, 2.4, -0.7, 0xffc888, 16, 8);   // wash the lantern from outside so it reads at night
+// prayer-tag rope: from the lantern roof down to a ground peg (grammar tags hang here)
+function rod(x1, y1, z1, x2, y2, z2, r, mat) {
+  const a = new THREE.Vector3(x1, y1, z1), b = new THREE.Vector3(x2, y2, z2);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, a.distanceTo(b), 6), mat);
+  m.position.copy(a).lerp(b, 0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.sub(a).normalize());
+  scene.add(m); return m;
+}
+rod(3.0, 1.68, -1.6, 3.45, 0.08, -1.15, 0.015, M.iron);
+cyl(0.08, 0.1, 0.14, M.stoneDark, 3.45, 0.07, -1.15, scene, 8);
 stoneLanternAt(-4.3, 3.8, 0.9); stoneLanternAt(4.3, 4.4, 0.9);
 // stepping-stone path: bath door -> pond -> study door
 const pathStones = [[0, 4.6], [-0.6, 3.6], [-1.4, 2.6], [-2.0, 1.4], [-1.2, 0.2], [-0.4, -1.0], [0, -2.4], [0, -3.8], [0, -4.8]];
@@ -460,11 +471,12 @@ const SLOTS = {
     { p: [10.28, 2.02, -9.3], ry: -Math.PI / 2 }, { p: [10.28, 2.02, -8.85], ry: -Math.PI / 2 } ] },
   'garden/koi-pond': { style: 'flat', s: 0.5, slots: lotusPos.map(p => ({ p })) },
   'garden/stone-lantern': { style: 'hang', s: 0.5, slots: [
-    // tags tied around the post (clear of the light box and roof)
-    { p: [2.95, 0.7, -1.45], ry: 0.8 }, { p: [2.25, 0.9, -1.45], ry: -0.8 }, { p: [2.6, 1.1, -1.2], ry: 0 },
-    // tags floating in the glow above the roof
-    { p: [3.1, 1.85, -1.6], ry: 1.57 }, { p: [2.1, 2.05, -1.6], ry: -1.57 },
-    { p: [2.6, 2.25, -1.1], ry: 0 }, { p: [2.6, 2.45, -2.1], ry: 3.14 } ] },
+    // 4 verb tags tied around the post
+    { p: [2.92, 0.65, -1.42], ry: 0.9 }, { p: [2.28, 0.82, -1.42], ry: -0.9 },
+    { p: [2.92, 0.99, -1.78], ry: 2.2 }, { p: [2.28, 1.16, -1.78], ry: -2.2 },
+    // 4 tags hanging from the prayer rope (3 grammar + 撮る)
+    { p: [3.11, 1.27, -1.49], ry: 0.9 }, { p: [3.2, 0.95, -1.4], ry: 0.9 },
+    { p: [3.29, 0.62, -1.31], ry: 0.9 }, { p: [3.38, 0.29, -1.22], ry: 0.9 } ] },
   'garden/bamboo-fence': { style: 'hang', s: 0.6, slots: [
     // cards tied to the station platform-end fence
     { p: [13.05, 0.85, 8.4], ry: -Math.PI / 2 }, { p: [13.05, 0.85, 9.1], ry: -Math.PI / 2 },
