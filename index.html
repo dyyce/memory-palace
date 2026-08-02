@@ -268,9 +268,9 @@ chochinLantern(9.5, 3.0, -9.75, 1.0);
 // ═══════════ STATION (fence = platform-end barrier) ═══════════
 box(7.9, 0.16, 2.4, M.stone, 9.5, 0.03, 12.2, scene, false);                 // platform
 box(7.9, 0.17, 0.25, new THREE.MeshStandardMaterial({ color: 0xd8b83a, roughness: .8 }), 9.5, 0.04, 10.95, scene, false); // yellow line
-box(1.6, 0.45, 0.5, M.woodMid, 8.2, 0.22, 12.6);                             // bench
-for (let i = 0; i < 12; i++) cyl(0.05, 0.05, 1.4, M.tatami, 13.2, 0.7, 8.0 + i * 0.35);
-box(0.08, 0.08, 4.2, M.woodDark, 13.2, 1.1, 9.9); box(0.08, 0.08, 4.2, M.woodDark, 13.2, 0.45, 9.9);
+box(1.6, 0.45, 0.5, M.woodMid, 8.2, 0.22, 11.85);                            // bench
+for (let i = 0; i < 12; i++) cyl(0.05, 0.05, 1.4, M.tatami, 7.3 + i * 0.45, 0.7, 13.1);
+box(4.2, 0.08, 0.08, M.woodDark, 9.75, 1.1, 13.1); box(4.2, 0.08, 0.08, M.woodDark, 9.75, 0.45, 13.1);
 chochinLantern(9.5, 2.8, 9.5, 0.9);
 
 // ═══════════ TEA ROOM (quiet annex, no cards yet) ═══════════
@@ -486,10 +486,10 @@ const SLOTS = {
     { p: [3.11, 1.27, -1.49], ry: 0.9 }, { p: [3.2, 0.95, -1.4], ry: 0.9 },
     { p: [3.29, 0.62, -1.31], ry: 0.9 }, { p: [3.38, 0.29, -1.22], ry: 0.9 } ] },
   'garden/bamboo-fence': { style: 'hang', s: 0.6, slots: [
-    // cards tied to the station platform-end fence
-    { p: [13.05, 0.85, 8.4], ry: -Math.PI / 2 }, { p: [13.05, 0.85, 9.1], ry: -Math.PI / 2 },
-    { p: [13.05, 0.85, 9.8], ry: -Math.PI / 2 }, { p: [13.05, 0.85, 10.5], ry: -Math.PI / 2 },
-    { p: [13.05, 0.85, 11.2], ry: -Math.PI / 2 } ] },
+    // cards tied to the track-side fence behind the station platform
+    { p: [7.6, 0.85, 13.0], ry: Math.PI }, { p: [8.55, 0.85, 13.0], ry: Math.PI },
+    { p: [9.5, 0.85, 13.0], ry: Math.PI }, { p: [10.45, 0.85, 13.0], ry: Math.PI },
+    { p: [11.4, 0.85, 13.0], ry: Math.PI } ] },
   'study/writing-desk': { style: 'flat', s: 0.5, slots: [
     // 6 verb sheets in a clean 3x2 grid on the desk
     { p: [-0.645, 0.8, -9.92] }, { p: [-0.215, 0.8, -9.92] }, { p: [0.215, 0.8, -9.92] }, { p: [0.645, 0.8, -9.92] },
