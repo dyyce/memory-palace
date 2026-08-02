@@ -363,6 +363,28 @@ function wrapText(g, text, x, y, maxW, lh, maxLines = 5) {
   lines.slice(0, maxLines).forEach((l, i) => g.fillText(l.trim(), x, y + i * lh));
 }
 
+// Portrait texture for bookshelf spines: vertical title like a real book spine.
+function spineTexture(title, sub, back) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 640;
+  const g = c.getContext('2d');
+  g.fillStyle = back ? '#2b3a42' : '#f7efdd';
+  g.beginPath(); g.roundRect(0, 0, 256, 640, 20); g.fill();
+  g.strokeStyle = back ? '#8fd0c8' : '#8a5f38'; g.lineWidth = 8; g.stroke();
+  g.textAlign = 'center'; g.fillStyle = back ? '#bfe8e0' : '#3a2a1a';
+  if (back) {
+    g.font = '600 30px "Avenir Next", sans-serif';
+    wrapText(g, title, 128, 90, 200, 40, 12);
+  } else {
+    const chars = [...title];
+    const fs = chars.length > 8 ? 38 : 52;
+    g.font = `600 ${fs}px "Hiragino Sans", sans-serif`;
+    chars.slice(0, 11).forEach((ch, i) => g.fillText(ch, 128, 78 + i * (fs + 8)));
+    g.font = '400 26px "Hiragino Sans", sans-serif'; g.fillStyle = '#8a5f38';
+    g.fillText(sub, 128, 616);
+  }
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t;
+}
+
 // ---------- creative placement: cards attached to objects ----------
 // styles: flat (lying), hang (vertical, fixed ry), ema (swinging plaques),
 //         towel (the rack towels themselves), spine (book spines), cam (fallback)
@@ -411,11 +433,14 @@ const SLOTS = {
     { p: [4.5, 0.85, 1.5], ry: -Math.PI / 2 }, { p: [4.5, 0.85, 2.2], ry: -Math.PI / 2 },
     { p: [4.5, 0.85, 2.9], ry: -Math.PI / 2 } ] },
   'study/writing-desk': { style: 'flat', s: 0.5, slots: [
+    // 6 verb sheets fanned on the desk
     { p: [-0.6, 0.8, -9.9] }, { p: [-0.25, 0.8, -9.75] }, { p: [-0.5, 0.8, -9.55] },
     { p: [0.1, 0.8, -9.95] }, { p: [0.15, 0.8, -9.6] }, { p: [-0.1, 0.8, -9.45] },
-    { p: [0.75, 0.82, -9.5], ry: 0.5, upright: true }, { p: [0.75, 0.82, -10.05], ry: -0.4, upright: true },
-    { p: [-0.85, 0.82, -9.5], ry: 0.9, upright: true }, { p: [0.35, 0.82, -10.15], ry: 0.1, upright: true },
-    { p: [-0.75, 0.82, -10.12], ry: 0.7, upright: true } ] },
+    // the 4 question-grammar slips pinned on the hanging scroll (the inquiry wall)
+    { p: [1.67, 1.65, -13.32], ry: 0, upright: true }, { p: [1.93, 1.65, -13.32], ry: 0, upright: true },
+    { p: [1.67, 2.2, -13.32], ry: 0, upright: true }, { p: [1.93, 2.2, -13.32], ry: 0, upright: true },
+    // 言う joins the desk fan
+    { p: [0.55, 0.8, -9.55] } ] },
   'study/bookshelf': { style: 'spine', s: 1, slots: [
     { p: [-3.55, 1.0, -12.52], ry: 0 }, { p: [-3.3, 1.0, -12.52], ry: 0 }, { p: [-3.05, 1.0, -12.52], ry: 0 },
     { p: [-2.8, 1.0, -12.52], ry: 0 }, { p: [-2.55, 1.0, -12.52], ry: 0 }, { p: [-2.3, 1.0, -12.52], ry: 0 },
@@ -433,14 +458,16 @@ const flipCards = [], emaCards = [], towelCards = [], camCards = [];
 for (const [anchor, cards] of Object.entries(byAnchor)) {
   const spec = SLOTS[anchor];
   cards.forEach((c, i) => {
-    const front = cardTexture(c.title, c.sub, false);
-    const back = cardTexture(c.en, c.note || '', true);
+    const spec = SLOTS[anchor];
+    const isSpine = spec && spec.style === 'spine' && i < spec.slots.length;
+    const front = isSpine ? spineTexture(c.title, c.sub, false) : cardTexture(c.title, c.sub, false);
+    const back = isSpine ? spineTexture(c.en, c.note || '', true) : cardTexture(c.en, c.note || '', true);
     let mesh, style = 'cam', baseY = 0;
     if (spec && i < spec.slots.length) {
       const slot = spec.slots[i];
       style = slot.upright ? 'hang' : spec.style;
-      const w = spec.style === 'spine' ? 0.22 : 0.8 * (spec.s || 1);
-      const h = spec.style === 'spine' ? 0.5 : spec.style === 'towel' ? 1.0 : 0.5 * (spec.s || 1);
+      const w = spec.style === 'spine' ? 0.26 : 0.8 * (spec.s || 1);
+      const h = spec.style === 'spine' ? 0.52 : spec.style === 'towel' ? 1.0 : 0.5 * (spec.s || 1);
       mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
         new THREE.MeshBasicMaterial({ map: front, transparent: true, side: THREE.DoubleSide }));
       mesh.position.set(...slot.p);
