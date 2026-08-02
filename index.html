@@ -441,7 +441,7 @@ const SLOTS = {
     { p: [-1.4, 0.55, 10.47], ry: 0, upright: true }, { p: [-2.87, 0.55, 9], ry: -Math.PI / 2, upright: true },
     { p: [0.07, 0.55, 9], ry: Math.PI / 2, upright: true }, { p: [-1.4, 0.55, 7.53], ry: Math.PI, upright: true } ] },
   'bath/towel-rack': { style: 'towel', s: 1, slots: [
-    { p: [1.45, 1.22, 11.07], ry: Math.PI - 0.4 }, { p: [2, 1.22, 11.3], ry: Math.PI - 0.4 }, { p: [2.55, 1.22, 11.53], ry: Math.PI - 0.4 } ] },
+    { p: [1.4, 1.22, 11.05], ry: Math.PI - 0.4 }, { p: [2, 1.22, 11.3], ry: Math.PI - 0.4 }, { p: [2.6, 1.22, 11.55], ry: Math.PI - 0.4 } ] },
   'kitchen/cutting-board': { style: 'flat', s: 0.55, slots: [
     { p: [8.75, 0.98, -2.75] }, { p: [9.25, 0.98, -2.7] }, { p: [9.0, 0.98, -2.45] },
     { p: [10.1, 1.36, -3.27], ry: 0, upright: true } ] },
@@ -505,7 +505,7 @@ for (const [anchor, cards] of Object.entries(byAnchor)) {
     if (spec && i < spec.slots.length) {
       const slot = spec.slots[i];
       style = slot.upright ? 'hang' : spec.style;
-      const w = spec.style === 'spine' ? 0.26 : 0.8 * (spec.s || 1);
+      const w = spec.style === 'spine' ? 0.26 : spec.style === 'towel' ? 0.55 : 0.8 * (spec.s || 1);
       const h = spec.style === 'spine' ? 0.52 : spec.style === 'towel' ? 1.0 : 0.5 * (spec.s || 1);
       mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
         new THREE.MeshBasicMaterial({ map: front, transparent: true, side: THREE.DoubleSide }));
