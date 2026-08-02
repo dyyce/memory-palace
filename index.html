@@ -282,7 +282,7 @@ chochinLantern(-9.5, 2.8, 9.5, 0.9);
 
 // ═══════════ BEDROOM ═══════════
 box(2.0, 0.28, 1.2, M.white, -10.5, 0.14, 1.2);                       // futon
-box(0.6, 0.18, 0.4, M.white, -10.9, 0.36, 0.9);                       // pillow
+box(0.6, 0.18, 0.4, M.white, -11.1, 0.36, 0.72);                      // pillow (head edge, clear of the cards)
 ball(0.35, new THREE.MeshStandardMaterial({ color: 0xa04038, roughness: .9 }), -8.6, 0.1, 0.6, scene, 0.35); // zabuton
 chochinLantern(-8, 2.4, -2, 1.0);                                     // the paper lantern anchor
 box(1.6, 2.0, 0.8, M.woodDark, -12.6, 1.0, -2.5);                     // tansu chest
@@ -444,8 +444,8 @@ function spineTexture(title, sub, back) {
 //         towel (the rack towels themselves), spine (book spines), cam (fallback)
 const SLOTS = {
   'bedroom/futon': { style: 'flat', s: 0.75, slots: [
-    { p: [-10.85, 0.33, 1.0] }, { p: [-10.2, 0.33, 1.0] },
-    { p: [-10.85, 0.33, 1.55] }, { p: [-10.2, 0.33, 1.55] } ] },
+    { p: [-10.7, 0.33, 1.2] }, { p: [-10.05, 0.33, 1.2] },
+    { p: [-10.7, 0.33, 1.58] }, { p: [-10.05, 0.33, 1.58] } ] },
   'bedroom/paper-lantern': { style: 'hang', s: 0.55, slots: [
     { p: [-8.5, 1.9, -2], ry: 0.3 }, { p: [-8, 1.55, -2.15], ry: -0.2 }, { p: [-7.5, 2.0, -1.9], ry: 0.5 } ] },
   'bedroom/tansu-chest': { style: 'hang', s: 0.6, slots: [
