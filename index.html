@@ -42,7 +42,7 @@
 <body>
 <div id="enter">
   <h1>一日の宮殿 <span>— A Day in Your Life</span></h1>
-  <p>寝室 Bedroom → お風呂 Bath → 台所 Kitchen → 庭園 Garden → 書斎 Study</p>
+  <p>寝室 Bedroom → お風呂 Bath → 台所 Kitchen → 庭園 Garden → 図書室 Library → 書斎 Study → 神社 Shrine · 駅 Station annex</p>
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · mouse to look · E or click to flip · 1/2/3 to grade a card · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
@@ -177,6 +177,10 @@ for (const dz of [-2.6, 0, 2.6]) box(8, 0.11, 0.08, M.tatamiEdge, -9.5, -0.045, 
 floorRect(0, 9.5, 8, 8, M.woodMid, true);        // bath
 floorRect(9.5, 0, 8, 8, M.woodMid, true);        // kitchen
 floorRect(0, -9.5, 8, 8, M.woodDark, true);      // study
+floorRect(-9.5, -9.5, 7.9, 7.9, M.woodDark, true); // library
+floorRect(9.5, -9.5, 7.9, 7.9, M.stone);         // shrine (gravel)
+floorRect(9.5, 9.5, 7.9, 7.9, M.stoneDark);      // station (platform)
+floorRect(-9.5, 9.5, 7.9, 7.9, M.tatami);        // tea room
 
 // ---------- walls (with collision) ----------
 const colliders = [];
@@ -186,19 +190,25 @@ function wallSeg(x1, z1, x2, z2, h = 3.4) {
   colliders.push({ minX: (x1 + x2) / 2 - w / 2, maxX: (x1 + x2) / 2 + w / 2,
                    minZ: (z1 + z2) / 2 - d / 2, maxZ: (z1 + z2) / 2 + d / 2 });
 }
+// perimeter
 wallSeg(-13.7, -13.7, 13.7, -13.45); wallSeg(-13.7, 13.45, 13.7, 13.7);
 wallSeg(-13.7, -13.7, -13.45, 13.7); wallSeg(13.45, -13.7, 13.7, 13.7);
-wallSeg(-13.7, -5.6, -1.2, -5.35); wallSeg(1.2, -5.6, 13.7, -5.35);
-wallSeg(-13.7, 5.35, -1.2, 5.6); wallSeg(1.2, 5.35, 13.7, 5.6);
-wallSeg(-5.6, -13.7, -5.35, -1.2); wallSeg(-5.6, 1.2, -5.35, 13.7);
-wallSeg(5.35, -13.7, 5.6, -1.2); wallSeg(5.6, 1.2, 5.35, 13.7);
+// internal 3x3 grid: doors (2.2 wide) between all neighboring rooms
+function wallLine(vertical, at, gaps) {
+  const from = -13.575, to = 13.575;
+  let cur = from;
+  for (const g of [...gaps].sort((a, b) => a - b)) {
+    if (g - 1.1 - cur > 0.1) vertical ? wallSeg(at - 0.125, cur, at + 0.125, g - 1.1) : wallSeg(cur, at - 0.125, g - 1.1, at + 0.125);
+    cur = g + 1.1;
+  }
+  if (to - cur > 0.1) vertical ? wallSeg(at - 0.125, cur, at + 0.125, to) : wallSeg(cur, at - 0.125, to, at + 0.125);
+}
+wallLine(true, -5.475, [-9.5, 0, 9.5]);
+wallLine(true, 5.475, [-9.5, 0, 9.5]);
+wallLine(false, -5.475, [-9.5, 0, 9.5]);
+wallLine(false, 5.475, [-9.5, 0, 9.5]);
 
 // ═══════════ GARDEN ═══════════
-const torii = new THREE.Group();
-cyl(0.16, 0.2, 3.2, M.red, -1.5, 1.6, 0, torii); cyl(0.16, 0.2, 3.2, M.red, 1.5, 1.6, 0, torii);
-box(4.2, 0.3, 0.4, M.red, 0, 3.3, 0, torii); box(3.4, 0.22, 0.3, M.red, 0, 2.7, 0, torii);
-torii.position.set(0, 0, 5.45); scene.add(torii);
-pointGlow(0, 2.6, 5.0, 0xff8055, 10, 6); // warm wash on the gate
 // koi pond + koi
 cyl(1.6, 1.7, 0.25, M.stone, -2.6, 0.12, -1.6);
 const pondWater = new THREE.Mesh(new THREE.CircleGeometry(1.5, 28), M.water);
@@ -220,7 +230,7 @@ for (let i = 0; i < 3; i++) {
 // main stone lantern (card anchor) + two decorative ones
 stoneLanternAt(2.6, -1.6, 1.15);
 stoneLanternAt(-4.3, 3.8, 0.9); stoneLanternAt(4.3, 4.4, 0.9);
-// stepping-stone path: torii -> pond -> study door
+// stepping-stone path: bath door -> pond -> study door
 const pathStones = [[0, 4.6], [-0.6, 3.6], [-1.4, 2.6], [-2.0, 1.4], [-1.2, 0.2], [-0.4, -1.0], [0, -2.4], [0, -3.8], [0, -4.8]];
 for (const [px, pz] of pathStones) cyl(0.34, 0.38, 0.08, M.stoneDark, px, 0.04, pz, scene, 9);
 // rocks & bushes & maple tree
@@ -228,10 +238,35 @@ ball(0.5, M.stoneDark, -4.4, 0.25, -3.9, scene, 0.7); ball(0.3, M.stone, -3.9, 0
 ball(0.55, M.leaf, 4.3, 0.4, -3.6); ball(0.4, M.leaf, 3.7, 0.3, -4.2); ball(0.45, M.leaf, -4.5, 0.35, 0.5);
 cyl(0.12, 0.18, 1.6, M.woodDark, -4.2, 0.8, -4.5, scene, 8);
 ball(0.9, M.mapleLeaf, -4.2, 2.0, -4.5); ball(0.6, M.mapleLeaf, -3.6, 1.7, -4.3); ball(0.55, M.mapleLeaf, -4.7, 1.75, -4.2);
-// bamboo fence + chochin string along it
-for (let i = 0; i < 12; i++) cyl(0.05, 0.05, 1.4, M.tatami, 4.6, 0.7, -0.5 + i * 0.35);
-box(0.08, 0.08, 4.2, M.woodDark, 4.6, 1.1, 1.4); box(0.08, 0.08, 4.2, M.woodDark, 4.6, 0.45, 1.4);
-for (let i = 0; i < 3; i++) chochinLantern(4.35, 2.2, 0.2 + i * 1.3, 0.7, i === 1);
+
+// ═══════════ SHRINE (the torii lives here, inside the room) ═══════════
+const torii = new THREE.Group();
+cyl(0.16, 0.2, 3.2, M.red, -1.5, 1.6, 0, torii); cyl(0.16, 0.2, 3.2, M.red, 1.5, 1.6, 0, torii);
+box(4.2, 0.3, 0.4, M.red, 0, 3.3, 0, torii); box(3.4, 0.22, 0.3, M.red, 0, 2.7, 0, torii);
+torii.rotation.y = Math.PI / 2;                 // faces the west door
+torii.position.set(10.5, 0, -9.75); scene.add(torii);
+pointGlow(10.1, 2.6, -9.75, 0xff8055, 10, 6);   // warm wash on the gate
+// offering box + honden + lantern pair
+box(1.3, 0.7, 0.9, M.woodDark, 8.0, 0.35, -9.75);
+for (let i = 0; i < 4; i++) box(0.12, 0.08, 0.9, M.woodLight, 7.6 + i * 0.27, 0.74, -9.75);
+box(1.8, 1.6, 1.6, M.woodDark, 12.6, 0.8, -9.75);
+box(2.2, 0.3, 2.0, M.red, 12.6, 1.75, -9.75);
+stoneLanternAt(7.6, -7.6, 0.9); stoneLanternAt(7.6, -11.9, 0.9);
+chochinLantern(9.5, 3.0, -9.75, 1.0);
+
+// ═══════════ STATION (fence = platform-end barrier) ═══════════
+box(7.9, 0.16, 2.4, M.stone, 9.5, 0.03, 12.2, scene, false);                 // platform
+box(7.9, 0.17, 0.25, new THREE.MeshStandardMaterial({ color: 0xd8b83a, roughness: .8 }), 9.5, 0.04, 10.95, scene, false); // yellow line
+box(1.6, 0.45, 0.5, M.woodMid, 8.2, 0.22, 12.6);                             // bench
+for (let i = 0; i < 12; i++) cyl(0.05, 0.05, 1.4, M.tatami, 13.2, 0.7, 8.0 + i * 0.35);
+box(0.08, 0.08, 4.2, M.woodDark, 13.2, 1.1, 9.9); box(0.08, 0.08, 4.2, M.woodDark, 13.2, 0.45, 9.9);
+chochinLantern(9.5, 2.8, 9.5, 0.9);
+
+// ═══════════ TEA ROOM (quiet annex, no cards yet) ═══════════
+box(1.4, 0.35, 0.9, M.woodDark, -9.5, 0.18, 9.5);
+ball(0.35, new THREE.MeshStandardMaterial({ color: 0x4a6b8a, roughness: .9 }), -10.3, 0.1, 9.5, scene, 0.35);
+ball(0.35, new THREE.MeshStandardMaterial({ color: 0x4a6b8a, roughness: .9 }), -8.7, 0.1, 9.5, scene, 0.35);
+chochinLantern(-9.5, 2.8, 9.5, 0.9);
 
 // ═══════════ BEDROOM ═══════════
 box(2.0, 0.28, 1.2, M.white, -10.5, 0.14, 1.2);                       // futon
@@ -327,8 +362,9 @@ for (const s of [0, 3]) for (let b = 0; b < 7; b++) {  // books only on rows 1 &
   box(0.16, 0.42, 0.28, new THREE.MeshStandardMaterial({ color: bookCols[(s + b) % 5], roughness: .85 }),
     -0.85 + b * 0.28, 0.45 + s * 0.55, 0.22, shelf, false);
 }
-shelf.position.set(-2.8, 0, -12.9); scene.add(shelf);
-chochinLantern(0, 3.0, -11.5, 1.1);
+shelf.position.set(-9.5, 0, -13.0); scene.add(shelf);
+box(1.4, 0.5, 0.9, M.woodMid, -7.4, 0.25, -9.5);                        // reading table
+chochinLantern(-9.5, 3.0, -9.5, 1.1);
 
 // ---------- card textures ----------
 function cardTexture(title, sub, back) {
@@ -415,11 +451,13 @@ const SLOTS = {
   'kitchen/tea-kettle': { style: 'hang', s: 0.5, slots: [
     { p: [6.6, 1.68, 1.5], ry: 0 }, { p: [7.0, 1.68, 1.5], ry: 0 }, { p: [7.4, 1.68, 1.5], ry: 0 } ] },
   'garden/torii-gate': { style: 'ema', s: 0.62, slots: [
-    { p: [-1.35, 2.3, 5.66], ry: 0 }, { p: [-0.9, 2.3, 5.66], ry: 0 }, { p: [-0.45, 2.3, 5.66], ry: 0 },
-    { p: [0, 2.3, 5.66], ry: 0 }, { p: [0.45, 2.3, 5.66], ry: 0 }, { p: [0.9, 2.3, 5.66], ry: 0 },
-    { p: [1.35, 2.3, 5.66], ry: 0 },
-    { p: [-0.9, 2.02, 5.66], ry: 0 }, { p: [-0.45, 2.02, 5.66], ry: 0 },
-    { p: [0.45, 2.02, 5.66], ry: 0 }, { p: [0.9, 2.02, 5.66], ry: 0 } ] },
+    // ema plaques on the shrine torii's west face (the gate stands INSIDE the shrine room)
+    { p: [10.28, 2.3, -11.1], ry: -Math.PI / 2 }, { p: [10.28, 2.3, -10.65], ry: -Math.PI / 2 },
+    { p: [10.28, 2.3, -10.2], ry: -Math.PI / 2 }, { p: [10.28, 2.3, -9.75], ry: -Math.PI / 2 },
+    { p: [10.28, 2.3, -9.3], ry: -Math.PI / 2 }, { p: [10.28, 2.3, -8.85], ry: -Math.PI / 2 },
+    { p: [10.28, 2.3, -8.4], ry: -Math.PI / 2 },
+    { p: [10.28, 2.02, -10.65], ry: -Math.PI / 2 }, { p: [10.28, 2.02, -10.2], ry: -Math.PI / 2 },
+    { p: [10.28, 2.02, -9.3], ry: -Math.PI / 2 }, { p: [10.28, 2.02, -8.85], ry: -Math.PI / 2 } ] },
   'garden/koi-pond': { style: 'flat', s: 0.5, slots: lotusPos.map(p => ({ p })) },
   'garden/stone-lantern': { style: 'hang', s: 0.5, slots: [
     // tags tied around the post (clear of the light box and roof)
@@ -428,9 +466,10 @@ const SLOTS = {
     { p: [3.1, 1.85, -1.6], ry: 1.57 }, { p: [2.1, 2.05, -1.6], ry: -1.57 },
     { p: [2.6, 2.25, -1.1], ry: 0 }, { p: [2.6, 2.45, -2.1], ry: 3.14 } ] },
   'garden/bamboo-fence': { style: 'hang', s: 0.6, slots: [
-    { p: [4.5, 0.85, 0.1], ry: -Math.PI / 2 }, { p: [4.5, 0.85, 0.8], ry: -Math.PI / 2 },
-    { p: [4.5, 0.85, 1.5], ry: -Math.PI / 2 }, { p: [4.5, 0.85, 2.2], ry: -Math.PI / 2 },
-    { p: [4.5, 0.85, 2.9], ry: -Math.PI / 2 } ] },
+    // cards tied to the station platform-end fence
+    { p: [13.05, 0.85, 8.4], ry: -Math.PI / 2 }, { p: [13.05, 0.85, 9.1], ry: -Math.PI / 2 },
+    { p: [13.05, 0.85, 9.8], ry: -Math.PI / 2 }, { p: [13.05, 0.85, 10.5], ry: -Math.PI / 2 },
+    { p: [13.05, 0.85, 11.2], ry: -Math.PI / 2 } ] },
   'study/writing-desk': { style: 'flat', s: 0.5, slots: [
     // 6 verb sheets in a clean 3x2 grid on the desk
     { p: [-0.645, 0.8, -9.92] }, { p: [-0.215, 0.8, -9.92] }, { p: [0.215, 0.8, -9.92] }, { p: [0.645, 0.8, -9.92] },
@@ -441,10 +480,10 @@ const SLOTS = {
     // 言う completes the verb grid (7th desk card, ordered after the grammar cards)
     { p: [0.215, 0.8, -9.55] } ] },
   'study/bookshelf': { style: 'spine', s: 1, slots: [
-    { p: [-3.55, 1.0, -12.52], ry: 0 }, { p: [-3.3, 1.0, -12.52], ry: 0 }, { p: [-3.05, 1.0, -12.52], ry: 0 },
-    { p: [-2.8, 1.0, -12.52], ry: 0 }, { p: [-2.55, 1.0, -12.52], ry: 0 }, { p: [-2.3, 1.0, -12.52], ry: 0 },
-    { p: [-3.55, 1.55, -12.52], ry: 0 }, { p: [-3.3, 1.55, -12.52], ry: 0 }, { p: [-3.05, 1.55, -12.52], ry: 0 },
-    { p: [-2.8, 1.55, -12.52], ry: 0 }, { p: [-2.55, 1.55, -12.52], ry: 0 }, { p: [-2.3, 1.55, -12.52], ry: 0 } ] },
+    { p: [-10.25, 1.0, -12.61], ry: 0 }, { p: [-10.0, 1.0, -12.61], ry: 0 }, { p: [-9.75, 1.0, -12.61], ry: 0 },
+    { p: [-9.5, 1.0, -12.61], ry: 0 }, { p: [-9.25, 1.0, -12.61], ry: 0 }, { p: [-9.0, 1.0, -12.61], ry: 0 },
+    { p: [-10.25, 1.55, -12.61], ry: 0 }, { p: [-10.0, 1.55, -12.61], ry: 0 }, { p: [-9.75, 1.55, -12.61], ry: 0 },
+    { p: [-9.5, 1.55, -12.61], ry: 0 }, { p: [-9.25, 1.55, -12.61], ry: 0 }, { p: [-9.0, 1.55, -12.61], ry: 0 } ] },
   'study/ink-stone': { style: 'hang', s: 0.38, slots: [
     // one straight row of slips along the desk's back edge
     { p: [-0.45, 0.86, -10.15], ry: 0 }, { p: [-0.15, 0.86, -10.15], ry: 0 },
@@ -534,16 +573,20 @@ function gradeLookedAt(g) { // 1 = again, 2 = good, 3 = easy
 
 // ---------- room detection ----------
 const ROOM_INFO = [
-  { test: (x, z) => x < -5.4 && Math.abs(z) < 5.4, ja: '寝室', en: 'Bedroom', rule: 'night & morning — the かう pair lives in the tansu chest' },
-  { test: (x, z) => z > 5.4 && Math.abs(x) < 5.4, ja: 'お風呂', en: 'Bath', rule: 'tub = touch temperature · rack = air temperature' },
-  { test: (x, z) => x > 5.4 && Math.abs(z) < 5.4, ja: '台所', en: 'Kitchen', rule: 'make / use / eat — つくる vs つかう on one board' },
-  { test: (x, z) => z < -5.4 && Math.abs(x) < 5.4, ja: '書斎', en: 'Study', rule: 'the inquiry desk — か the hook, question words, requests' },
-  { test: () => true, ja: '庭園', en: 'Garden', rule: 'the coupling machine — て-form ema plaques hang on the torii beam' },
+  { c: [-9.5, 0], ja: '寝室', en: 'Bedroom', rule: 'night & morning — the かう pair lives in the tansu chest' },
+  { c: [0, 9.5], ja: 'お風呂', en: 'Bath', rule: 'tub = touch temperature · rack = air temperature' },
+  { c: [9.5, 0], ja: '台所', en: 'Kitchen', rule: 'make / use / eat — つくる vs つかう on one board' },
+  { c: [0, -9.5], ja: '書斎', en: 'Study', rule: 'desk = hand skills · scroll = questions · ink stone = where work starts' },
+  { c: [-9.5, -9.5], ja: '図書室', en: 'Library', rule: 'the knowledge shelf — どれ picks from many, どっち from two' },
+  { c: [9.5, -9.5], ja: '神社', en: 'Shrine', rule: 'the coupling machine — verbs clamp with て, engines swap to える/られる' },
+  { c: [9.5, 9.5], ja: '駅', en: 'Station', rule: 'deliveries & departures — 届く arrives alone (が), 届ける you deliver (を)' },
+  { c: [-9.5, 9.5], ja: '茶室', en: 'Tea Room', rule: 'quiet annex — nothing to recall here, just breathe' },
+  { c: [0, 0], ja: '庭園', en: 'Garden', rule: 'water & nature — lotus cards on the pond, tags in the lantern glow' },
 ];
 const roomEl = document.getElementById('roomName'), ruleEl = document.getElementById('roomRule');
 let lastRoom = '';
 function updateRoom(x, z) {
-  const r = ROOM_INFO.find(r => r.test(x, z));
+  const r = ROOM_INFO.find(r => Math.abs(x - r.c[0]) < 4.6 && Math.abs(z - r.c[1]) < 4.6) || ROOM_INFO[8];
   if (r.en !== lastRoom) {
     lastRoom = r.en;
     roomEl.innerHTML = `${r.ja} <span>${r.en}</span>`;
