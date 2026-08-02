@@ -26,6 +26,12 @@
     position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
     color: #f5e6d0; font-size: 18px; z-index: 5; pointer-events: none; opacity: .8;
   }
+  #prog {
+    position: fixed; top: 14px; right: 14px; color: #ffd98a; z-index: 5;
+    font-family: "Hiragino Sans", "Avenir Next", sans-serif; font-size: 13px; font-weight: 600;
+    background: rgba(20, 12, 8, .68); border: 1px solid #6b4a2f;
+    border-radius: 10px; padding: 10px 14px; pointer-events: none;
+  }
   #hint {
     position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
     color: #f5e6d0; opacity: .55; font-size: 12px; z-index: 5; pointer-events: none;
@@ -38,11 +44,13 @@
   <h1>一日の宮殿 <span>— A Day in Your Life</span></h1>
   <p>寝室 Bedroom → お風呂 Bath → 台所 Kitchen → 庭園 Garden → 書斎 Study</p>
   <p><b>Click to enter</b></p>
-  <p>WASD / arrows to walk · mouse to look · E or click to flip the card you're looking at · ESC to release</p>
+  <p>WASD / arrows to walk · mouse to look · E or click to flip · 1/2/3 to grade a card · ESC to release</p>
+  <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
 </div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
+<div id="prog"></div>
 <div id="cross">+</div>
-<div id="hint">E / click = flip card · walk through doorways between rooms</div>
+<div id="hint">E / click = flip · 1 2 3 = grade (again / good / easy) · gold = mastered</div>
 <script type="importmap">
 { "imports": {
   "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
@@ -315,7 +323,7 @@ box(0.8, 0.06, 0.06, M.woodDark, 1.8, 2.72, -13.35);
 const shelf = new THREE.Group();
 box(2.2, 2.4, 0.4, M.woodDark, 0, 1.2, 0, shelf);
 const bookCols = [0xa04038, 0x38608a, 0x5f8a48, 0xc09038, 0x7a4a88];
-for (let s = 0; s < 4; s++) for (let b = 0; b < 7; b++) {
+for (const s of [0, 3]) for (let b = 0; b < 7; b++) {  // books only on rows 1 & 4; rows 2 & 3 belong to the spine cards
   if (Math.random() < 0.15) continue;
   box(0.16, 0.42, 0.28, new THREE.MeshStandardMaterial({ color: bookCols[(s + b) % 5], roughness: .85 }),
     -0.85 + b * 0.28, 0.45 + s * 0.55, 0.22, shelf, false);
@@ -369,26 +377,35 @@ const SLOTS = {
     { p: [-12.95, 1.1, -2.07], ry: 0 }, { p: [-12.25, 1.1, -2.07], ry: 0 },
     { p: [-12.95, 1.65, -2.07], ry: 0 }, { p: [-12.25, 1.65, -2.07], ry: 0 } ] },
   'bath/wooden-tub': { style: 'flat', s: 0.6, slots: [
-    { p: [-1.8, 0.99, 8.6] }, { p: [-1.0, 0.99, 8.8] }, { p: [-1.5, 0.99, 9.5] } ] },
+    // 6 floaters on the water (two rings)
+    { p: [-1.9, 0.99, 8.5] }, { p: [-0.9, 0.99, 8.7] }, { p: [-1.4, 0.99, 9.3] },
+    { p: [-2.1, 0.99, 9.1] }, { p: [-1.1, 0.99, 9.55] }, { p: [-1.75, 0.99, 8.75] },
+    // 4 tags tied to the tub's outer wall, facing outward
+    { p: [-1.4, 0.55, 10.47], ry: 0, upright: true }, { p: [-2.87, 0.55, 9], ry: -Math.PI / 2, upright: true },
+    { p: [0.07, 0.55, 9], ry: Math.PI / 2, upright: true }, { p: [-1.4, 0.55, 7.53], ry: Math.PI, upright: true } ] },
   'bath/towel-rack': { style: 'towel', s: 1, slots: [
-    { p: [1.45, 1.22, 11.07], ry: -0.4 }, { p: [2, 1.22, 11.3], ry: -0.4 }, { p: [2.55, 1.22, 11.53], ry: -0.4 } ] },
+    { p: [1.45, 1.22, 11.07], ry: Math.PI - 0.4 }, { p: [2, 1.22, 11.3], ry: Math.PI - 0.4 }, { p: [2.55, 1.22, 11.53], ry: Math.PI - 0.4 } ] },
   'kitchen/cutting-board': { style: 'flat', s: 0.55, slots: [
     { p: [8.75, 0.98, -2.75] }, { p: [9.25, 0.98, -2.7] }, { p: [9.0, 0.98, -2.45] },
     { p: [10.1, 1.36, -3.27], ry: 0, upright: true } ] },
   'kitchen/rice-cooker': { style: 'hang', s: 0.42, slots: [
-    { p: [11.82, 0.35, 1.94], ry: 0 }, { p: [12.18, 0.35, 1.94], ry: 0 },
-    { p: [11.82, 0.78, 1.94], ry: 0 }, { p: [12.18, 0.78, 1.94], ry: 0 } ] },
+    { p: [11.86, 0.2, 1.93], ry: 0 }, { p: [12.14, 0.2, 1.93], ry: 0 },
+    { p: [11.86, 0.48, 1.93], ry: 0 }, { p: [12.14, 0.48, 1.93], ry: 0 } ] },
   'kitchen/tea-kettle': { style: 'hang', s: 0.5, slots: [
-    { p: [6.65, 1.55, 1.5], ry: 0.4 }, { p: [7, 1.5, 1.62], ry: 0 }, { p: [7.35, 1.55, 1.5], ry: -0.4 } ] },
+    { p: [6.6, 1.68, 1.5], ry: 0 }, { p: [7.0, 1.68, 1.5], ry: 0 }, { p: [7.4, 1.68, 1.5], ry: 0 } ] },
   'garden/torii-gate': { style: 'ema', s: 0.62, slots: [
-    { p: [-1.35, 2.3, 5.45], ry: 0 }, { p: [-0.9, 2.3, 5.45], ry: 0 }, { p: [-0.45, 2.3, 5.45], ry: 0 },
-    { p: [0, 2.3, 5.45], ry: 0 }, { p: [0.45, 2.3, 5.45], ry: 0 }, { p: [0.9, 2.3, 5.45], ry: 0 },
-    { p: [1.35, 2.3, 5.45], ry: 0 } ] },
+    { p: [-1.35, 2.3, 5.66], ry: 0 }, { p: [-0.9, 2.3, 5.66], ry: 0 }, { p: [-0.45, 2.3, 5.66], ry: 0 },
+    { p: [0, 2.3, 5.66], ry: 0 }, { p: [0.45, 2.3, 5.66], ry: 0 }, { p: [0.9, 2.3, 5.66], ry: 0 },
+    { p: [1.35, 2.3, 5.66], ry: 0 },
+    { p: [-0.9, 2.02, 5.66], ry: 0 }, { p: [-0.45, 2.02, 5.66], ry: 0 },
+    { p: [0.45, 2.02, 5.66], ry: 0 }, { p: [0.9, 2.02, 5.66], ry: 0 } ] },
   'garden/koi-pond': { style: 'flat', s: 0.5, slots: lotusPos.map(p => ({ p })) },
   'garden/stone-lantern': { style: 'hang', s: 0.5, slots: [
-    { p: [2.95, 0.95, -1.45], ry: 0.8 }, { p: [2.25, 1.15, -1.45], ry: -0.8 }, { p: [2.6, 1.35, -1.2], ry: 0 },
-    { p: [2.95, 1.55, -1.75], ry: 2.4 }, { p: [2.25, 1.75, -1.75], ry: -2.4 }, { p: [2.6, 1.95, -1.35], ry: 3.14 },
-    { p: [2.9, 2.1, -1.6], ry: 1.6 } ] },
+    // tags tied around the post (clear of the light box and roof)
+    { p: [2.95, 0.7, -1.45], ry: 0.8 }, { p: [2.25, 0.9, -1.45], ry: -0.8 }, { p: [2.6, 1.1, -1.2], ry: 0 },
+    // tags floating in the glow above the roof
+    { p: [3.1, 1.85, -1.6], ry: 1.57 }, { p: [2.1, 2.05, -1.6], ry: -1.57 },
+    { p: [2.6, 2.25, -1.1], ry: 0 }, { p: [2.6, 2.45, -2.1], ry: 3.14 } ] },
   'garden/bamboo-fence': { style: 'hang', s: 0.6, slots: [
     { p: [4.5, 0.85, 0.1], ry: -Math.PI / 2 }, { p: [4.5, 0.85, 0.8], ry: -Math.PI / 2 },
     { p: [4.5, 0.85, 1.5], ry: -Math.PI / 2 }, { p: [4.5, 0.85, 2.2], ry: -Math.PI / 2 },
@@ -397,14 +414,16 @@ const SLOTS = {
     { p: [-0.6, 0.8, -9.9] }, { p: [-0.25, 0.8, -9.75] }, { p: [-0.5, 0.8, -9.55] },
     { p: [0.1, 0.8, -9.95] }, { p: [0.15, 0.8, -9.6] }, { p: [-0.1, 0.8, -9.45] },
     { p: [0.75, 0.82, -9.5], ry: 0.5, upright: true }, { p: [0.75, 0.82, -10.05], ry: -0.4, upright: true },
-    { p: [-0.85, 0.82, -9.5], ry: 0.9, upright: true }, { p: [0.35, 0.82, -10.15], ry: 0.1, upright: true } ] },
+    { p: [-0.85, 0.82, -9.5], ry: 0.9, upright: true }, { p: [0.35, 0.82, -10.15], ry: 0.1, upright: true },
+    { p: [-0.75, 0.82, -10.12], ry: 0.7, upright: true } ] },
   'study/bookshelf': { style: 'spine', s: 1, slots: [
-    { p: [-3.55, 1.0, -12.65], ry: 0 }, { p: [-3.3, 1.0, -12.65], ry: 0 }, { p: [-3.05, 1.0, -12.65], ry: 0 },
-    { p: [-2.8, 1.0, -12.65], ry: 0 }, { p: [-2.55, 1.0, -12.65], ry: 0 },
-    { p: [-3.55, 1.55, -12.65], ry: 0 }, { p: [-3.3, 1.55, -12.65], ry: 0 }, { p: [-3.05, 1.55, -12.65], ry: 0 },
-    { p: [-2.8, 1.55, -12.65], ry: 0 } ] },
+    { p: [-3.55, 1.0, -12.52], ry: 0 }, { p: [-3.3, 1.0, -12.52], ry: 0 }, { p: [-3.05, 1.0, -12.52], ry: 0 },
+    { p: [-2.8, 1.0, -12.52], ry: 0 }, { p: [-2.55, 1.0, -12.52], ry: 0 }, { p: [-2.3, 1.0, -12.52], ry: 0 },
+    { p: [-3.55, 1.55, -12.52], ry: 0 }, { p: [-3.3, 1.55, -12.52], ry: 0 }, { p: [-3.05, 1.55, -12.52], ry: 0 },
+    { p: [-2.8, 1.55, -12.52], ry: 0 }, { p: [-2.55, 1.55, -12.52], ry: 0 }, { p: [-2.3, 1.55, -12.52], ry: 0 } ] },
   'study/ink-stone': { style: 'hang', s: 0.38, slots: [
-    { p: [0.35, 0.88, -9.65], ry: 0.6 }, { p: [0.65, 0.88, -9.7], ry: -0.5 }, { p: [0.5, 0.88, -9.95], ry: 3.1 } ] },
+    { p: [0.35, 0.88, -9.65], ry: 0.6 }, { p: [0.65, 0.88, -9.7], ry: -0.5 }, { p: [0.5, 0.88, -9.95], ry: 3.1 },
+    { p: [0.8, 0.88, -9.9], ry: -1.2 } ] },
 };
 const FALLBACK = { pos: [0, 2.2, 0], r: 3.0 };
 
@@ -437,12 +456,53 @@ for (const [anchor, cards] of Object.entries(byAnchor)) {
       baseY = a[1] + 1.4 + (i % 3) * 0.3;
       mesh.position.set(a[0] + Math.cos(angle) * r, baseY, a[2] + Math.sin(angle) * r);
     }
-    mesh.userData = { front, back, flipped: false, baseY, phase: Math.random() * 6.28, style };
+    mesh.userData = { front, back, flipped: false, baseY, phase: Math.random() * 6.28, style, title: c.title };
     scene.add(mesh); flipCards.push(mesh);
     if (style === 'ema') emaCards.push(mesh);
     if (style === 'towel') towelCards.push(mesh);
     if (style === 'cam') camCards.push(mesh);
   });
+}
+
+// ---------- progress tracking (localStorage ritual log) ----------
+const PKEY = 'palace-progress-v1';
+const prog = Object.assign({ cards: {}, streak: 0, lastDay: '' },
+  JSON.parse(localStorage.getItem(PKEY) || '{}'));
+const dayStr = (d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+const todayStr = dayStr(new Date());
+const yesterdayStr = dayStr(new Date(Date.now() - 864e5));
+const saveProg = () => localStorage.setItem(PKEY, JSON.stringify(prog));
+const cardProg = t => prog.cards[t] ??= { known: 0, seen: 0, last: '' };
+const isMastered = t => cardProg(t).known >= 3;
+
+function applyTint(m) {
+  const cp = cardProg(m.userData.title);
+  m.material.color.set(isMastered(m.userData.title) ? 0xffd98a : cp.last === todayStr ? 0xa8e0d0 : 0xffffff);
+}
+flipCards.forEach(applyTint);
+
+const progEl = document.getElementById('prog');
+function updateProgHUD() {
+  const total = flipCards.length;
+  const mastered = flipCards.filter(m => isMastered(m.userData.title)).length;
+  const todayCount = flipCards.filter(m => cardProg(m.userData.title).last === todayStr).length;
+  progEl.innerHTML = `🔥 ${prog.streak} day${prog.streak === 1 ? '' : 's'} · today ${todayCount}/${total} · mastered ${mastered}/${total}`;
+}
+updateProgHUD();
+
+function gradeLookedAt(g) { // 1 = again, 2 = good, 3 = easy
+  ray.setFromCamera(new THREE.Vector2(0, 0), camera);
+  const hit = ray.intersectObjects(flipCards)[0];
+  if (!hit) return;
+  const cp = cardProg(hit.object.userData.title);
+  cp.seen++;
+  cp.known = g === 1 ? Math.max(0, cp.known - 1) : cp.known + (g === 3 ? 1.5 : 1);
+  cp.last = todayStr;
+  if (prog.lastDay !== todayStr) {
+    prog.streak = prog.lastDay === yesterdayStr ? prog.streak + 1 : 1;
+    prog.lastDay = todayStr;
+  }
+  saveProg(); applyTint(hit.object); updateProgHUD();
 }
 
 // ---------- room detection ----------
@@ -466,7 +526,13 @@ function updateRoom(x, z) {
 
 // ---------- movement + collision ----------
 const keys = {};
-addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'KeyE') flipLookedAt(); });
+addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'KeyE') flipLookedAt();
+  if (e.code === 'Digit1') gradeLookedAt(1);
+  if (e.code === 'Digit2') gradeLookedAt(2);
+  if (e.code === 'Digit3') gradeLookedAt(3);
+});
 addEventListener('keyup', e => keys[e.code] = false);
 addEventListener('pointerdown', () => { if (controls.isLocked) flipLookedAt(); });
 
@@ -530,7 +596,7 @@ function animate() {
   sp.needsUpdate = true;
   koi.forEach((k, i) => {
     const a = t * (0.3 + i * 0.12) + i * 2.1;
-    k.position.set(-2.6 + Math.cos(a) * 0.9, 0.28, -1.6 + Math.sin(a) * 0.9);
+    k.position.set(-2.6 + Math.cos(a) * 0.55, 0.28, -1.6 + Math.sin(a) * 0.55);
     k.rotation.y = -a;
   });
   emaCards.forEach(m => { m.rotation.z = Math.sin(t * 1.3 + m.userData.phase) * 0.09; });
