@@ -444,8 +444,8 @@ function spineTexture(title, sub, back) {
 //         towel (the rack towels themselves), spine (book spines), cam (fallback)
 const SLOTS = {
   'bedroom/futon': { style: 'flat', s: 0.75, slots: [
-    { p: [-10.7, 0.33, 1.2] }, { p: [-10.05, 0.33, 1.2] },
-    { p: [-10.7, 0.33, 1.58] }, { p: [-10.05, 0.33, 1.58] } ] },
+    { p: [-10.7, 0.33, 1.05] }, { p: [-10.05, 0.33, 1.05] },
+    { p: [-10.7, 0.33, 1.55] }, { p: [-10.05, 0.33, 1.55] } ] },
   'bedroom/paper-lantern': { style: 'hang', s: 0.55, slots: [
     { p: [-8.5, 1.9, -2], ry: 0.3 }, { p: [-8, 1.55, -2.15], ry: -0.2 }, { p: [-7.5, 2.0, -1.9], ry: 0.5 } ] },
   'bedroom/tansu-chest': { style: 'hang', s: 0.6, slots: [
@@ -463,7 +463,7 @@ const SLOTS = {
   'bath/towel-rack': { style: 'towel', s: 1, slots: [
     { p: [1.4, 1.22, 11.05], ry: Math.PI - 0.4 }, { p: [2, 1.22, 11.3], ry: Math.PI - 0.4 }, { p: [2.6, 1.22, 11.55], ry: Math.PI - 0.4 } ] },
   'kitchen/cutting-board': { style: 'flat', s: 0.55, slots: [
-    { p: [8.75, 0.98, -2.75] }, { p: [9.25, 0.98, -2.7] }, { p: [9.0, 0.98, -2.45] },
+    { p: [8.72, 0.98, -2.85] }, { p: [9.28, 0.98, -2.85] }, { p: [9.0, 0.98, -2.5] },
     { p: [10.1, 1.36, -3.27], ry: 0, upright: true } ] },
   'kitchen/rice-cooker': { style: 'hang', s: 0.42, slots: [
     { p: [11.86, 0.2, 1.93], ry: 0 }, { p: [12.14, 0.2, 1.93], ry: 0 },
@@ -546,12 +546,113 @@ for (const [anchor, cards] of Object.entries(byAnchor)) {
       baseY = a[1] + 1.4 + (i % 3) * 0.3;
       mesh.position.set(a[0] + Math.cos(angle) * r, baseY, a[2] + Math.sin(angle) * r);
     }
-    mesh.userData = { front, back, flipped: false, baseY, phase: Math.random() * 6.28, style, title: c.title };
+    mesh.userData = { front, back, flipped: false, baseY, phase: Math.random() * 6.28, style, title: c.title,
+      anchor, uw: mesh.geometry.parameters.width, uh: mesh.geometry.parameters.height,
+      ry: (spec && spec.slots[i] ? spec.slots[i].ry || 0 : 0) };
     scene.add(mesh); flipCards.push(mesh);
     if (style === 'ema') emaCards.push(mesh);
     if (style === 'towel') towelCards.push(mesh);
     if (style === 'cam') camCards.push(mesh);
   });
+}
+
+// ---------- placement validation (open with ?validate; report lives in #validation) ----------
+// Solid object boxes: cards may touch their OWN anchor's solids but never be
+// buried inside anything else. [name, cx,cy,cz, w,h,d, ownerAnchors]
+const SOLIDS = [
+  ['futon', -10.5, 0.14, 1.2, 2.0, 0.28, 1.2, ['bedroom/futon']],
+  ['pillow', -11.1, 0.36, 0.72, 0.6, 0.18, 0.4, ['bedroom/futon']],
+  ['tansu', -12.6, 1.0, -2.5, 1.6, 2.0, 0.8, ['bedroom/tansu-chest']],
+  ['bed-low-table', -7.2, 0.2, 1.8, 1.0, 0.4, 0.7, []],
+  ['tub', -1.4, 0.55, 9, 2.9, 1.1, 2.9, ['bath/wooden-tub']],
+  ['bath-stool', 0.4, 0.15, 11.8, 0.7, 0.3, 0.7, []],
+  ['bath-bucket', 0.9, 0.18, 12.2, 0.6, 0.36, 0.6, []],
+  ['first-aid-cabinet', -3.8, 1.1, 10.2, 0.25, 1.3, 0.9, ['bath/wooden-tub']],
+  ['mirror', -3.9, 1.4, 11.5, 1.2, 1.6, 0.06, []],
+  ['rack-post-a', 1.17, 0.9, 10.95, 0.1, 1.8, 0.1, ['bath/towel-rack']],
+  ['rack-post-b', 2.83, 0.9, 11.65, 0.1, 1.8, 0.1, ['bath/towel-rack']],
+  ['counter', 9, 0.45, -2.8, 3.0, 0.9, 1.0, ['kitchen/cutting-board']],
+  ['backsplash', 9, 1.35, -3.32, 3.0, 0.8, 0.08, ['kitchen/cutting-board']],
+  ['rice-cooker', 12, 0.3, 1.5, 0.84, 0.68, 0.84, ['kitchen/rice-cooker']],
+  ['kettle-table', 7, 0.37, 1.5, 1.2, 0.75, 0.8, ['kitchen/tea-kettle']],
+  ['kettle', 7, 1.12, 1.5, 0.7, 0.4, 0.7, ['kitchen/tea-kettle']],
+  ['desk-top', 0, 0.75, -9.8, 1.8, 0.08, 0.9, ['study/writing-desk', 'study/ink-stone']],
+  ['bookshelf', -9.5, 1.2, -13.0, 2.2, 2.4, 0.4, ['study/bookshelf']],
+  ['reading-table', -7.4, 0.25, -9.5, 1.4, 0.5, 0.9, []],
+  ['offering-box', 8.0, 0.35, -9.75, 1.3, 0.7, 0.9, []],
+  ['honden', 12.6, 0.8, -9.75, 1.8, 1.6, 1.6, []],
+  ['torii-post-a', 10.5, 1.6, -11.25, 0.4, 3.2, 0.4, ['garden/torii-gate']],
+  ['torii-post-b', 10.5, 1.6, -8.25, 0.4, 3.2, 0.4, ['garden/torii-gate']],
+  ['torii-beam-low', 10.5, 2.7, -9.75, 0.3, 0.22, 3.4, ['garden/torii-gate']],
+  ['torii-beam-top', 10.5, 3.3, -9.75, 0.4, 0.3, 4.2, []],
+  ['pond-rim', -2.6, 0.12, -1.6, 3.4, 0.25, 3.4, ['garden/koi-pond']],
+  ['lantern-base', 2.6, 0.25, -1.6, 0.55, 0.5, 0.55, ['garden/stone-lantern']],
+  ['lantern-post', 2.6, 0.85, -1.6, 0.28, 0.7, 0.28, ['garden/stone-lantern']],
+  ['lantern-head', 2.6, 1.4, -1.6, 0.62, 0.42, 0.62, ['garden/stone-lantern']],
+  ['lantern-roof', 2.6, 1.68, -1.6, 0.85, 0.16, 0.85, ['garden/stone-lantern']],
+  ['bench', 8.2, 0.22, 11.85, 1.6, 0.45, 0.5, []],
+  ['platform', 9.5, 0.03, 12.2, 7.9, 0.16, 2.4, []],
+  ['tea-table', -9.5, 0.18, 9.5, 1.4, 0.35, 0.9, []],
+];
+const DOORS = [];
+for (const a of [-5.475, 5.475]) for (const g of [-9.5, 0, 9.5]) {
+  DOORS.push({ minX: a - 0.35, maxX: a + 0.35, minY: 0, maxY: 2.2, minZ: g - 1.1, maxZ: g + 1.1 });
+  DOORS.push({ minX: g - 1.1, maxX: g + 1.1, minY: 0, maxY: 2.2, minZ: a - 0.35, maxZ: a + 0.35 });
+}
+const solidBox = ([name, cx, cy, cz, w, h, d, owners]) => ({
+  name, owners: owners || [],
+  minX: cx - w / 2, maxX: cx + w / 2, minY: cy - h / 2, maxY: cy + h / 2, minZ: cz - d / 2, maxZ: cz + d / 2 });
+function cardBox(m) {
+  const u = m.userData, p = m.position;
+  if (u.style === 'flat') {
+    return { minX: p.x - u.uw / 2, maxX: p.x + u.uw / 2, minY: p.y - 0.06, maxY: p.y + 0.06,
+             minZ: p.z - u.uh / 2 - 0.05, maxZ: p.z + u.uh / 2 + 0.05 };
+  }
+  const c = Math.abs(Math.cos(u.ry)), s = Math.abs(Math.sin(u.ry));
+  return { minX: p.x - u.uw / 2 * c - 0.01, maxX: p.x + u.uw / 2 * c + 0.01,
+           minY: p.y - u.uh / 2, maxY: p.y + u.uh / 2,
+           minZ: p.z - u.uw / 2 * s - 0.01, maxZ: p.z + u.uw / 2 * s + 0.01 };
+}
+const OVERLAP_TOL = 0.06; // hanging cards may touch; only flag real stacking
+const pen = (a, b) => Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX) > OVERLAP_TOL &&
+                      Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY) > 0.005 &&
+                      Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ) > OVERLAP_TOL;
+const hitBox = (a, b) => a.minX < b.maxX && a.maxX > b.minX && a.minY < b.maxY && a.maxY > b.minY && a.minZ < b.maxZ && a.maxZ > b.minZ;
+const inside = (b, p) => p.x > b.minX && p.x < b.maxX && p.y > b.minY && p.y < b.maxY && p.z > b.minZ && p.z < b.maxZ;
+
+const violations = [];
+const cardBoxes = flipCards.map(cardBox);
+const SOLID_BOXES = SOLIDS.map(solidBox);
+flipCards.forEach((m, i) => {
+  const u = m.userData;
+  for (const s of SOLID_BOXES) {
+    if (!s.owners.includes(u.anchor) && inside(s, m.position))
+      violations.push(`${u.title}: buried inside ${s.name}`);
+  }
+  for (const d of DOORS) if (hitBox(cardBoxes[i], d)) violations.push(`${u.title}: blocks a doorway`);
+  for (let j = i + 1; j < flipCards.length; j++) {
+    if (pen(cardBoxes[i], cardBoxes[j])) violations.push(`${u.title}: overlaps ${flipCards[j].userData.title}`);
+  }
+});
+for (const [anchor, cards] of Object.entries(byAnchor)) {
+  const spec = SLOTS[anchor];
+  if (!spec) violations.push(`${anchor}: no slot spec (${cards.length} cards)`);
+  else if (cards.length > spec.slots.length)
+    violations.push(`${anchor}: ${cards.length - spec.slots.length} card(s) without a slot (orbiting)`);
+}
+const vEl = document.createElement('div');
+vEl.id = 'validation';
+vEl.textContent = violations.length
+  ? `VIOLATIONS (${violations.length}): ${violations.join(' | ')}`
+  : `OK: ${flipCards.length} cards, 0 violations`;
+document.body.appendChild(vEl);
+if (PARAMS.has('validate')) {
+  document.title = violations.length ? `PALACE: ${violations.length} violations` : 'PALACE OK';
+  Object.assign(vEl.style, { position: 'fixed', bottom: '40px', left: '14px', zIndex: 20,
+    color: violations.length ? '#ff8888' : '#8fd0a0', background: 'rgba(20,12,8,.85)',
+    padding: '8px 12px', borderRadius: '8px', font: '12px monospace', maxWidth: '60vw', whiteSpace: 'pre-wrap' });
+  for (const m of flipCards)
+    if (violations.some(v => v.startsWith(m.userData.title + ':'))) m.material.color.set(0xff6666);
 }
 
 // ---------- progress tracking (localStorage ritual log) ----------
