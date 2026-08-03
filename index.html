@@ -47,7 +47,7 @@
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · Shift to run · Space to jump · E or click to flip · 1/2/3 to grade · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v11 (13 rooms)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v12 (13 rooms)</p>
 </div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
 <div id="prog"></div>
@@ -333,15 +333,15 @@ pointGlow(17.7, 2.4, 5.6, 0xffc070, 10, 6);           // warm the bench + rail
 pointGlow(17.7, 1.8, 2.2, 0xffc070, 7, 5);            // and the usage rack
 
 // --- C: ADJECTIVE GALLERY — い-wall north vs な-wall south, trap on a pedestal ---
-// display panels
+// display panels: い-panel on the north wall, な-panel flush on the east wall (no doors there)
 box(4.6, 1.6, 0.08, M.white, 27.2, 1.7, -8.63);       // い-panel
-box(4.6, 1.6, 0.08, M.plaster, 27.2, 1.7, -0.87);     // な-panel
+box(0.08, 1.6, 4.6, M.plaster, 31.16, 1.7, -4.75);    // な-panel
 // trap pedestal in the middle with its own spotlight
 cyl(0.3, 0.4, 1.0, M.stoneDark, 26.5, 0.5, -4.75, scene, 12);
 pointGlow(26.5, 2.2, -4.75, 0xffd090, 9, 4);
 chochinLantern(27.2, 3.0, -4.75, 1.1);
 pointGlow(27.2, 2.2, -7.9, 0xffc070, 9, 5);           // い-wall wash
-pointGlow(27.2, 2.2, -1.6, 0xffc070, 9, 5);           // な-wall wash
+pointGlow(30.2, 2.2, -4.75, 0xffc070, 9, 5);          // な-wall wash
 
 // --- D: DESIRE & POTENTIAL PAVILION — wishing fountain + power machine ---
 // fountain (decor)
@@ -613,8 +613,8 @@ const SLOTS = {
     { p: [25.4, 1.7, -8.58], ry: 0 }, { p: [26.3, 1.7, -8.58], ry: 0 }, { p: [27.2, 1.7, -8.58], ry: 0 },
     { p: [28.1, 1.7, -8.58], ry: 0 }, { p: [29.0, 1.7, -8.58], ry: 0 } ] },
   'annex/na-wall': { style: 'hang', s: 0.6, slots: [
-    { p: [25.4, 1.7, -0.92], ry: Math.PI }, { p: [26.3, 1.7, -0.92], ry: Math.PI }, { p: [27.2, 1.7, -0.92], ry: Math.PI },
-    { p: [28.1, 1.7, -0.92], ry: Math.PI }, { p: [29.0, 1.7, -0.92], ry: Math.PI } ] },
+    { p: [31.11, 1.7, -6.55], ry: -Math.PI / 2 }, { p: [31.11, 1.7, -5.65], ry: -Math.PI / 2 }, { p: [31.11, 1.7, -4.75], ry: -Math.PI / 2 },
+    { p: [31.11, 1.7, -3.85], ry: -Math.PI / 2 }, { p: [31.11, 1.7, -2.95], ry: -Math.PI / 2 } ] },
   'annex/trap-pedestal': { style: 'hang', s: 0.6, slots: [
     { p: [26.08, 1.3, -4.75], ry: -Math.PI / 2 } ] },
   'annex/tai-board': { style: 'hang', s: 0.6, slots: [
@@ -716,7 +716,7 @@ const SOLIDS = [
   ['te-bench', 17.7, 0.45, 6.3, 3.6, 0.9, 1.0, ['annex/te-bench']],
   ['te-usage-rack', 17.7, 0.9, 1.2, 3.0, 1.8, 0.35, ['annex/te-usage-rack']],
   ['i-panel', 27.2, 1.7, -8.63, 4.6, 1.6, 0.08, ['annex/i-wall']],
-  ['na-panel', 27.2, 1.7, -0.87, 4.6, 1.6, 0.08, ['annex/na-wall']],
+  ['na-panel', 31.16, 1.7, -4.75, 0.08, 1.6, 4.6, ['annex/na-wall']],
   ['trap-pedestal', 26.5, 0.5, -4.75, 0.8, 1.0, 0.8, ['annex/trap-pedestal']],
   ['wish-fountain', 27.2, 0.35, 4.75, 2.5, 0.7, 2.5, []],
   ['potential-machine', 27.2, 1.0, 8.3, 2.4, 2.0, 0.6, ['annex/potential-machine']],
