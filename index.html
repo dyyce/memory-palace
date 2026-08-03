@@ -46,7 +46,7 @@
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · mouse to look · E or click to flip · 1/2/3 to grade a card · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-02 · v8 (9 rooms)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v9 (9 rooms)</p>
 </div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
 <div id="prog"></div>
@@ -466,18 +466,19 @@ const SLOTS = {
     { p: [8.72, 0.98, -2.85] }, { p: [9.28, 0.98, -2.85] }, { p: [9.0, 0.98, -2.5] },
     { p: [10.1, 1.36, -3.27], ry: 0, upright: true } ] },
   'kitchen/rice-cooker': { style: 'hang', s: 0.42, slots: [
-    { p: [11.86, 0.2, 1.93], ry: 0 }, { p: [12.14, 0.2, 1.93], ry: 0 },
-    { p: [11.86, 0.48, 1.93], ry: 0 }, { p: [12.14, 0.48, 1.93], ry: 0 } ] },
+    { p: [11.79, 0.2, 1.93], ry: 0 }, { p: [12.21, 0.2, 1.93], ry: 0 },
+    { p: [11.79, 0.48, 1.93], ry: 0 }, { p: [12.21, 0.48, 1.93], ry: 0 } ] },
   'kitchen/tea-kettle': { style: 'hang', s: 0.5, slots: [
     { p: [6.6, 1.66, 1.5], ry: 0 }, { p: [7.0, 1.66, 1.5], ry: 0 }, { p: [7.4, 1.66, 1.5], ry: 0 } ] },
-  'garden/torii-gate': { style: 'ema', s: 0.62, slots: [
+  'garden/torii-gate': { style: 'ema', s: 0.55, slots: [
     // ema plaques on the shrine torii's west face (the gate stands INSIDE the shrine room)
-    { p: [10.28, 2.3, -11.1], ry: -Math.PI / 2 }, { p: [10.28, 2.3, -10.65], ry: -Math.PI / 2 },
-    { p: [10.28, 2.3, -10.2], ry: -Math.PI / 2 }, { p: [10.28, 2.3, -9.75], ry: -Math.PI / 2 },
-    { p: [10.28, 2.3, -9.3], ry: -Math.PI / 2 }, { p: [10.28, 2.3, -8.85], ry: -Math.PI / 2 },
-    { p: [10.28, 2.3, -8.4], ry: -Math.PI / 2 },
-    { p: [10.28, 2.02, -10.65], ry: -Math.PI / 2 }, { p: [10.28, 2.02, -10.2], ry: -Math.PI / 2 },
-    { p: [10.28, 2.02, -9.3], ry: -Math.PI / 2 }, { p: [10.28, 2.02, -8.85], ry: -Math.PI / 2 } ] },
+    // top row of 7 under the lower beam, bottom row of 4 beneath — spaced so nothing stacks
+    { p: [10.28, 2.32, -11.35], ry: -Math.PI / 2 }, { p: [10.28, 2.32, -10.85], ry: -Math.PI / 2 },
+    { p: [10.28, 2.32, -10.35], ry: -Math.PI / 2 }, { p: [10.28, 2.32, -9.85], ry: -Math.PI / 2 },
+    { p: [10.28, 2.32, -9.35], ry: -Math.PI / 2 }, { p: [10.28, 2.32, -8.85], ry: -Math.PI / 2 },
+    { p: [10.28, 2.32, -8.35], ry: -Math.PI / 2 },
+    { p: [10.28, 1.98, -10.6], ry: -Math.PI / 2 }, { p: [10.28, 1.98, -9.85], ry: -Math.PI / 2 },
+    { p: [10.28, 1.98, -9.1], ry: -Math.PI / 2 }, { p: [10.28, 1.98, -8.35], ry: -Math.PI / 2 } ] },
   'garden/koi-pond': { style: 'flat', s: 0.5, slots: lotusPos.map(p => ({ p })) },
   'garden/stone-lantern': { style: 'hang', s: 0.5, slots: [
     // 4 verb tags tied around the post
@@ -495,9 +496,9 @@ const SLOTS = {
     // 6 verb sheets in a clean 3x2 grid on the desk
     { p: [-0.645, 0.8, -9.92] }, { p: [-0.215, 0.8, -9.92] }, { p: [0.215, 0.8, -9.92] }, { p: [0.645, 0.8, -9.92] },
     { p: [-0.645, 0.8, -9.55] }, { p: [-0.215, 0.8, -9.55] },
-    // the 4 question-grammar slips pinned on the hanging scroll (the inquiry wall)
-    { p: [1.67, 1.65, -13.32], ry: 0, upright: true }, { p: [1.93, 1.65, -13.32], ry: 0, upright: true },
-    { p: [1.67, 2.2, -13.32], ry: 0, upright: true }, { p: [1.93, 2.2, -13.32], ry: 0, upright: true },
+    // the 4 question-grammar slips pinned on the hanging scroll in a single readable column (the inquiry wall)
+    { p: [1.8, 1.32, -13.32], ry: 0, upright: true }, { p: [1.8, 1.74, -13.32], ry: 0, upright: true },
+    { p: [1.8, 2.16, -13.32], ry: 0, upright: true }, { p: [1.8, 2.58, -13.32], ry: 0, upright: true },
     // 言う completes the verb grid (7th desk card, ordered after the grammar cards)
     { p: [0.215, 0.8, -9.55] } ] },
   'study/bookshelf': { style: 'spine', s: 1, slots: [
@@ -613,10 +614,11 @@ function cardBox(m) {
            minY: p.y - u.uh / 2, maxY: p.y + u.uh / 2,
            minZ: p.z - u.uw / 2 * s - 0.01, maxZ: p.z + u.uw / 2 * s + 0.01 };
 }
-const OVERLAP_TOL = 0.06; // hanging cards may touch; only flag real stacking
-const pen = (a, b) => Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX) > OVERLAP_TOL &&
-                      Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY) > 0.005 &&
-                      Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ) > OVERLAP_TOL;
+const OVERLAP_TOL = 0.06; // wide-axis tolerance: hanging cards may touch; only flag real stacking
+const THIN_TOL = 0.005;   // thin axis (plane normal): coplanar cards on one wall must not stack either
+const pen = (a, b) => Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX) > (a.maxX - a.minX < 0.05 || b.maxX - b.minX < 0.05 ? THIN_TOL : OVERLAP_TOL) &&
+                      Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY) > THIN_TOL &&
+                      Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ) > (a.maxZ - a.minZ < 0.05 || b.maxZ - b.minZ < 0.05 ? THIN_TOL : OVERLAP_TOL);
 const hitBox = (a, b) => a.minX < b.maxX && a.maxX > b.minX && a.minY < b.maxY && a.maxY > b.minY && a.minZ < b.maxZ && a.maxZ > b.minZ;
 const inside = (b, p) => p.x > b.minX && p.x < b.maxX && p.y > b.minY && p.y < b.maxY && p.z > b.minZ && p.z < b.maxZ;
 
