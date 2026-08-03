@@ -43,15 +43,16 @@
 <div id="enter">
   <h1>一日の宮殿 <span>— A Day in Your Life</span></h1>
   <p>寝室 Bedroom → お風呂 Bath → 台所 Kitchen → 庭園 Garden → 図書室 Library → 書斎 Study → 神社 Shrine · 駅 Station annex</p>
+  <p>文法別館 Grammar Annex: 仕分け場 Sorting Hall → て形工房 Te-form Workshop → 形容詞の間 Adjective Gallery → たいと可能の館 Desire &amp; Potential</p>
   <p><b>Click to enter</b></p>
-  <p>WASD / arrows to walk · mouse to look · E or click to flip · 1/2/3 to grade a card · ESC to release</p>
+  <p>WASD / arrows to walk · Shift to run · Space to jump · E or click to flip · 1/2/3 to grade · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v10 (9 rooms)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v11 (13 rooms)</p>
 </div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
 <div id="prog"></div>
 <div id="cross">+</div>
-<div id="hint">E / click = flip · 1 2 3 = grade (again / good / easy) · gold = mastered</div>
+<div id="hint">Shift = run · Space = jump · E / click = flip · 1 2 3 = grade · gold = mastered</div>
 <script type="importmap">
 { "imports": {
   "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
@@ -62,7 +63,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-const CARDS = [{"title": "寝る", "sub": "ねる", "en": "to sleep; to go to bed", "note": "verb (ichidan)", "anchor": "bedroom/futon"}, {"title": "眠る", "sub": "ねむる", "en": "to sleep (deeply)", "note": "verb (godan)", "anchor": "bedroom/futon"}, {"title": "起きる", "sub": "おきる", "en": "to wake up; to get up", "note": "verb (ichidan)", "anchor": "bedroom/futon"}, {"title": "昼寝", "sub": "ひるね", "en": "nap", "note": "noun", "anchor": "bedroom/futon"}, {"title": "休む", "sub": "やすむ", "en": "to rest; to take a day off", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "帰る", "sub": "かえる", "en": "to go home; to return", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "終わる", "sub": "おわる", "en": "to finish; to end", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "買う", "sub": "かう", "en": "to buy", "note": "verb (godan)", "anchor": "bedroom/tansu-chest"}, {"title": "飼う", "sub": "かう", "en": "to keep; to own (a pet)", "note": "verb (godan)", "anchor": "bedroom/tansu-chest"}, {"title": "ある", "sub": "ある", "en": "to be; to exist (inanimate)", "note": "verb (irregular)", "anchor": "bedroom/tansu-chest"}, {"title": "いる", "sub": "いる", "en": "to be; to exist (animate)", "note": "verb (ichidan)", "anchor": "bedroom/tansu-chest"}, {"title": "残り", "sub": "のこり", "en": "the rest; the remainder", "note": "noun", "anchor": "bedroom/tansu-chest"}, {"title": "特別な", "sub": "とくべつな", "en": "special", "note": "na-adjective", "anchor": "bedroom/tansu-chest"}, {"title": "熱い", "sub": "あつい", "en": "hot (objects; drinks; things you touch)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "温かい", "sub": "あたたかい", "en": "warm (pleasantly; to the touch)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "冷たい", "sub": "つめたい", "en": "cold (to the touch; drinks; things)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "暑い", "sub": "あつい", "en": "hot (weather; air)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "寒い", "sub": "さむい", "en": "cold (weather; air)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "涼しい", "sub": "すずしい", "en": "cool; pleasantly cool (weather)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "作る", "sub": "つくる", "en": "to make; to cook", "note": "verb (godan)", "anchor": "kitchen/cutting-board"}, {"title": "使う", "sub": "つかう", "en": "to use", "note": "verb (godan)", "anchor": "kitchen/cutting-board"}, {"title": "材料", "sub": "ざいりょう", "en": "ingredients; materials", "note": "noun", "anchor": "kitchen/cutting-board"}, {"title": "道具", "sub": "どうぐ", "en": "tool", "note": "noun", "anchor": "kitchen/cutting-board"}, {"title": "食べる", "sub": "たべる", "en": "to eat", "note": "verb (ichidan)", "anchor": "kitchen/rice-cooker"}, {"title": "壊す", "sub": "こわす", "en": "to break; お腹を壊す = to get an upset stomach", "note": "verb (godan)", "anchor": "kitchen/rice-cooker"}, {"title": "ひどい", "sub": "ひどい", "en": "terrible; awful", "note": "i-adjective", "anchor": "kitchen/rice-cooker"}, {"title": "びっくりする", "sub": "びっくりする", "en": "to be surprised", "note": "verb (suru)", "anchor": "kitchen/rice-cooker"}, {"title": "飲む", "sub": "のむ", "en": "to drink", "note": "verb (godan)", "anchor": "kitchen/tea-kettle"}, {"title": "うるさい", "sub": "うるさい", "en": "noisy; loud", "note": "i-adjective", "anchor": "kitchen/tea-kettle"}, {"title": "飲み放題", "sub": "のみほうだい", "en": "all-you-can-drink", "note": "noun", "anchor": "kitchen/tea-kettle"}, {"title": "行く", "sub": "いく", "en": "to go", "note": "verb (godan; irregular て-form 行って)", "anchor": "garden/torii-gate"}, {"title": "来る", "sub": "くる", "en": "to come", "note": "verb (irregular)", "anchor": "garden/torii-gate"}, {"title": "入る", "sub": "はいる", "en": "to enter", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "泳ぐ", "sub": "およぐ", "en": "to swim", "note": "verb (godan)", "anchor": "garden/koi-pond"}, {"title": "湖", "sub": "みずうみ", "en": "lake (freshwater; NOT the sea 海)", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "咲く", "sub": "さく", "en": "to bloom", "note": "verb (godan)", "anchor": "garden/koi-pond"}, {"title": "天気", "sub": "てんき", "en": "weather", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "季節", "sub": "きせつ", "en": "season", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "黄緑", "sub": "きみどり", "en": "light green; yellow-green", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "見せる", "sub": "みせる", "en": "to show; to present (〜に見せる)", "note": "verb (ichidan)", "anchor": "garden/stone-lantern"}, {"title": "見つける", "sub": "みつける", "en": "to find", "note": "verb (ichidan)", "anchor": "garden/stone-lantern"}, {"title": "急ぐ", "sub": "いそぐ", "en": "to hurry", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "座る", "sub": "すわる", "en": "to sit", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "届く", "sub": "とどく", "en": "to arrive; to be delivered (intransitive; takes が)", "note": "verb (godan)", "anchor": "garden/bamboo-fence"}, {"title": "届ける", "sub": "とどける", "en": "to deliver (transitive; takes を)", "note": "verb (ichidan)", "anchor": "garden/bamboo-fence"}, {"title": "出張", "sub": "しゅっちょう", "en": "business trip", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "特急", "sub": "とっきゅう", "en": "limited express (train)", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "自転車", "sub": "じてんしゃ", "en": "bicycle", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "書く", "sub": "かく", "en": "to write", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "読む", "sub": "よむ", "en": "to read", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "聞く", "sub": "きく", "en": "to listen; to ask", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "話す", "sub": "はなす", "en": "to speak; to talk", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "学ぶ", "sub": "まなぶ", "en": "to learn", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "覚える", "sub": "おぼえる", "en": "to remember; to memorize", "note": "verb (ichidan)", "anchor": "study/writing-desk"}, {"title": "分かる", "sub": "わかる", "en": "to understand", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "難しい", "sub": "むずかしい", "en": "difficult", "note": "i-adjective", "anchor": "study/bookshelf"}, {"title": "簡単な", "sub": "かんたんな", "en": "easy; simple", "note": "na-adjective", "anchor": "study/bookshelf"}, {"title": "趣味", "sub": "しゅみ", "en": "hobby", "note": "noun", "anchor": "study/bookshelf"}, {"title": "働く", "sub": "はたらく", "en": "to work", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "開発する", "sub": "かいはつする", "en": "to develop", "note": "verb (suru)", "anchor": "study/bookshelf"}, {"title": "比べる", "sub": "くらべる", "en": "to compare (two concrete things)", "note": "verb (ichidan)", "anchor": "study/bookshelf"}, {"title": "比較する", "sub": "ひかくする", "en": "to compare (formal; analysis)", "note": "verb (suru)", "anchor": "study/bookshelf"}, {"title": "する", "sub": "する", "en": "to do", "note": "verb (irregular)", "anchor": "study/ink-stone"}, {"title": "始める", "sub": "はじめる", "en": "to start (something)", "note": "verb (ichidan)", "anchor": "study/ink-stone"}, {"title": "かかる", "sub": "かかる", "en": "to take (time); to cost", "note": "verb (godan)", "anchor": "study/ink-stone"}, {"title": "て形の作り方", "sub": "grammar", "en": "The て-form factory. Godan verbs get a coupling clamped on by ending: う/つ/る take the って snap-clamp; む/ぶ/ぬ sink into the んで mud-coupler; く becomes いて (a kite); ぐ becomes いで; す becomes して. 行く is the VIP exception car: 行っ...", "note": "godan: う/つ/る→って · む/ぶ/ぬ→んで · く→いて · ぐ→いで · す→して · exception 行く→行って | ichidan: 〜る→〜て | す...", "anchor": "garden/torii-gate"}, {"title": "〜て（連結）", "sub": "grammar", "en": "Chain actions with て: each verb-car couples to the next and the tense rides only on the LAST verb. The palace route itself is the sentence: 起きて、入って、食べて、出て、勉強します。", "note": "verb-て + verb-て + … + final verb (tense)", "anchor": "garden/torii-gate"}, {"title": "〜てから", "sub": "grammar", "en": "Ticket-gate order: the first action must FULLY pass through before the next begins. てから = after doing ~ (strict sequence).", "note": "verb-て + から", "anchor": "garden/torii-gate"}, {"title": "〜ている", "sub": "grammar", "en": "A car parked inside the gate with its engine still running: an ongoing action or a resulting state. 泳いでいます = is swimming (right now); 結婚しています = is married (state).", "note": "verb-て + いる", "anchor": "garden/torii-gate"}, {"title": "〜てみる", "sub": "grammar", "en": "Try it and SEE (みる = to see): hold the action up to the lantern light to test it. てみる = try doing ~ (and see how it goes).", "note": "verb-て + みる", "anchor": "garden/stone-lantern"}, {"title": "〜てしまう", "sub": "grammar", "en": "The lantern lies SMASHED on the ground: an action completed with regret, or finished completely and irreversibly. てしまう = end up doing / do it all.", "note": "verb-て + しまう", "anchor": "garden/stone-lantern"}, {"title": "〜たり〜たりする", "sub": "grammar", "en": "The lantern flickers between two states: sometimes bright, sometimes dim. たり lists example actions, non-exhaustive — do things like ~ and ~.", "note": "verb-たり + verb-たり + する", "anchor": "garden/stone-lantern"}, {"title": "〜か", "sub": "grammar", "en": "The kana か is shaped like a HOOK: hang it on the end of any statement and it swings the sentence up into a question. No word-order change needed.", "note": "statement + か (rising intonation in casual speech)", "anchor": "study/writing-desk"}, {"title": "疑問詞", "sub": "grammar", "en": "Five pigeonholes on the desk, one per question word: 何 what (a box), どこ where (a map pin), いつ when (a clock), だれ who (a silhouette), どう how (a toolbox). The question word stays IN the sentence where the answer would g...", "note": "Q-word in place of the unknown + か | 何＝what · どこ＝where · いつ＝when · だれ＝who · どう＝how · どの...", "anchor": "study/writing-desk"}, {"title": "〜てもいいですか", "sub": "grammar", "en": "Permission window at the desk: you slide your て-form action under the glass and the clerk stamps いいですよ. てもいいですか = may I ~? Bridge card: て-form + question in one move.", "note": "verb-て + もいいですか | answer: はい、いいですよ / だめです", "anchor": "study/writing-desk"}, {"title": "〜てくれる？", "sub": "grammar", "en": "A gift handed DOWN to you across the desk: someone does the action for your benefit. てくれる = they do ~ for me; as a casual request: てくれる？ / more polite: てもらえますか.", "note": "verb-て + くれる / もらう | request: 〜てくれる？ → 〜てもらえますか (politer)", "anchor": "study/writing-desk"}, {"title": "どれ・どっち", "sub": "grammar", "en": "Two books or a whole shelf? どっち chooses between TWO things (どちら casual); どれ picks from THREE or more. The shelf holds many books (どれ); the scale compares two (どっち).", "note": "AとBでは、どっちが〜 | どれが好きですか", "anchor": "study/bookshelf"}, {"title": "〜れる／〜られる", "sub": "grammar", "en": "Potential form: can do. The gate's second machine swaps a car's engine instead of adding a clamp: godan cars get the える engine (飲む→飲める, 走る→走れる); ichidan stretch to られる (食べる→食べられる); VIP cars: する→できる, 来る→来（こ）られる. Trap: ...", "note": "godan: う-row→え-row + る (行く→行ける) | ichidan: る→られる | する→できる · 来る→来られる", "anchor": "garden/torii-gate"}, {"title": "選ぶ", "sub": "えらぶ", "en": "to choose", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "飛ぶ", "sub": "とぶ", "en": "to fly; to jump", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "歩く", "sub": "あるく", "en": "to walk", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "撮る", "sub": "とる", "en": "to take (a photo)", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "言う", "sub": "いう", "en": "to say", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "引退する", "sub": "いんたいする", "en": "to retire (from sport)", "note": "verb (suru)", "anchor": "study/ink-stone"}, {"title": "資格", "sub": "しかく", "en": "qualification; license", "note": "noun", "anchor": "study/bookshelf"}, {"title": "必要", "sub": "ひつよう", "en": "necessary; needed", "note": "na-adjective / noun", "anchor": "study/bookshelf"}, {"title": "骨折", "sub": "こっせつ", "en": "bone fracture", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "半分", "sub": "はんぶん", "en": "half", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "筋肉痛", "sub": "きんにくつう", "en": "muscle pain; sore muscles", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "かかと", "sub": "かかと", "en": "heel", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "脳", "sub": "のう", "en": "brain", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "医者", "sub": "いしゃ", "en": "doctor", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "レントゲン", "sub": "レントゲン", "en": "X-ray", "note": "noun", "anchor": "bath/wooden-tub"}];
+const CARDS = [{"title": "寝る", "sub": "ねる", "en": "to sleep; to go to bed", "note": "verb (ichidan)", "anchor": "bedroom/futon"}, {"title": "眠る", "sub": "ねむる", "en": "to sleep (deeply)", "note": "verb (godan)", "anchor": "bedroom/futon"}, {"title": "起きる", "sub": "おきる", "en": "to wake up; to get up", "note": "verb (ichidan)", "anchor": "bedroom/futon"}, {"title": "昼寝", "sub": "ひるね", "en": "nap", "note": "noun", "anchor": "bedroom/futon"}, {"title": "休む", "sub": "やすむ", "en": "to rest; to take a day off", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "帰る", "sub": "かえる", "en": "to go home; to return", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "終わる", "sub": "おわる", "en": "to finish; to end", "note": "verb (godan)", "anchor": "bedroom/paper-lantern"}, {"title": "買う", "sub": "かう", "en": "to buy", "note": "verb (godan)", "anchor": "bedroom/tansu-chest"}, {"title": "飼う", "sub": "かう", "en": "to keep; to own (a pet)", "note": "verb (godan)", "anchor": "bedroom/tansu-chest"}, {"title": "ある", "sub": "ある", "en": "to be; to exist (inanimate)", "note": "verb (irregular)", "anchor": "bedroom/tansu-chest"}, {"title": "いる", "sub": "いる", "en": "to be; to exist (animate)", "note": "verb (ichidan)", "anchor": "bedroom/tansu-chest"}, {"title": "残り", "sub": "のこり", "en": "the rest; the remainder", "note": "noun", "anchor": "bedroom/tansu-chest"}, {"title": "特別な", "sub": "とくべつな", "en": "special", "note": "na-adjective", "anchor": "bedroom/tansu-chest"}, {"title": "熱い", "sub": "あつい", "en": "hot (objects; drinks; things you touch)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "温かい", "sub": "あたたかい", "en": "warm (pleasantly; to the touch)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "冷たい", "sub": "つめたい", "en": "cold (to the touch; drinks; things)", "note": "i-adjective", "anchor": "bath/wooden-tub"}, {"title": "暑い", "sub": "あつい", "en": "hot (weather; air)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "寒い", "sub": "さむい", "en": "cold (weather; air)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "涼しい", "sub": "すずしい", "en": "cool; pleasantly cool (weather)", "note": "i-adjective", "anchor": "bath/towel-rack"}, {"title": "作る", "sub": "つくる", "en": "to make; to cook", "note": "verb (godan)", "anchor": "kitchen/cutting-board"}, {"title": "使う", "sub": "つかう", "en": "to use", "note": "verb (godan)", "anchor": "kitchen/cutting-board"}, {"title": "材料", "sub": "ざいりょう", "en": "ingredients; materials", "note": "noun", "anchor": "kitchen/cutting-board"}, {"title": "道具", "sub": "どうぐ", "en": "tool", "note": "noun", "anchor": "kitchen/cutting-board"}, {"title": "食べる", "sub": "たべる", "en": "to eat", "note": "verb (ichidan)", "anchor": "kitchen/rice-cooker"}, {"title": "壊す", "sub": "こわす", "en": "to break; お腹を壊す = to get an upset stomach", "note": "verb (godan)", "anchor": "kitchen/rice-cooker"}, {"title": "ひどい", "sub": "ひどい", "en": "terrible; awful", "note": "i-adjective", "anchor": "kitchen/rice-cooker"}, {"title": "びっくりする", "sub": "びっくりする", "en": "to be surprised", "note": "verb (suru)", "anchor": "kitchen/rice-cooker"}, {"title": "飲む", "sub": "のむ", "en": "to drink", "note": "verb (godan)", "anchor": "kitchen/tea-kettle"}, {"title": "うるさい", "sub": "うるさい", "en": "noisy; loud", "note": "i-adjective", "anchor": "kitchen/tea-kettle"}, {"title": "飲み放題", "sub": "のみほうだい", "en": "all-you-can-drink", "note": "noun", "anchor": "kitchen/tea-kettle"}, {"title": "行く", "sub": "いく", "en": "to go", "note": "verb (godan; irregular て-form 行って)", "anchor": "garden/torii-gate"}, {"title": "来る", "sub": "くる", "en": "to come", "note": "verb (irregular)", "anchor": "garden/torii-gate"}, {"title": "入る", "sub": "はいる", "en": "to enter", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "泳ぐ", "sub": "およぐ", "en": "to swim", "note": "verb (godan)", "anchor": "garden/koi-pond"}, {"title": "湖", "sub": "みずうみ", "en": "lake (freshwater; NOT the sea 海)", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "咲く", "sub": "さく", "en": "to bloom", "note": "verb (godan)", "anchor": "garden/koi-pond"}, {"title": "天気", "sub": "てんき", "en": "weather", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "季節", "sub": "きせつ", "en": "season", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "黄緑", "sub": "きみどり", "en": "light green; yellow-green", "note": "noun", "anchor": "garden/koi-pond"}, {"title": "見せる", "sub": "みせる", "en": "to show; to present (〜に見せる)", "note": "verb (ichidan)", "anchor": "garden/stone-lantern"}, {"title": "見つける", "sub": "みつける", "en": "to find", "note": "verb (ichidan)", "anchor": "garden/stone-lantern"}, {"title": "急ぐ", "sub": "いそぐ", "en": "to hurry", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "座る", "sub": "すわる", "en": "to sit", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "届く", "sub": "とどく", "en": "to arrive; to be delivered (intransitive; takes が)", "note": "verb (godan)", "anchor": "garden/bamboo-fence"}, {"title": "届ける", "sub": "とどける", "en": "to deliver (transitive; takes を)", "note": "verb (ichidan)", "anchor": "garden/bamboo-fence"}, {"title": "出張", "sub": "しゅっちょう", "en": "business trip", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "特急", "sub": "とっきゅう", "en": "limited express (train)", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "自転車", "sub": "じてんしゃ", "en": "bicycle", "note": "noun", "anchor": "garden/bamboo-fence"}, {"title": "書く", "sub": "かく", "en": "to write", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "読む", "sub": "よむ", "en": "to read", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "聞く", "sub": "きく", "en": "to listen; to ask", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "話す", "sub": "はなす", "en": "to speak; to talk", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "学ぶ", "sub": "まなぶ", "en": "to learn", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "覚える", "sub": "おぼえる", "en": "to remember; to memorize", "note": "verb (ichidan)", "anchor": "study/writing-desk"}, {"title": "分かる", "sub": "わかる", "en": "to understand", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "難しい", "sub": "むずかしい", "en": "difficult", "note": "i-adjective", "anchor": "study/bookshelf"}, {"title": "簡単な", "sub": "かんたんな", "en": "easy; simple", "note": "na-adjective", "anchor": "study/bookshelf"}, {"title": "趣味", "sub": "しゅみ", "en": "hobby", "note": "noun", "anchor": "study/bookshelf"}, {"title": "働く", "sub": "はたらく", "en": "to work", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "開発する", "sub": "かいはつする", "en": "to develop", "note": "verb (suru)", "anchor": "study/bookshelf"}, {"title": "比べる", "sub": "くらべる", "en": "to compare (two concrete things)", "note": "verb (ichidan)", "anchor": "study/bookshelf"}, {"title": "比較する", "sub": "ひかくする", "en": "to compare (formal; analysis)", "note": "verb (suru)", "anchor": "study/bookshelf"}, {"title": "する", "sub": "する", "en": "to do", "note": "verb (irregular)", "anchor": "study/ink-stone"}, {"title": "始める", "sub": "はじめる", "en": "to start (something)", "note": "verb (ichidan)", "anchor": "study/ink-stone"}, {"title": "かかる", "sub": "かかる", "en": "to take (time); to cost", "note": "verb (godan)", "anchor": "study/ink-stone"}, {"title": "て形の作り方", "sub": "grammar", "en": "The て-form factory. Godan verbs get a coupling clamped on by ending: う/つ/る take the って snap-clamp; む/ぶ/ぬ sink into the んで mud-coupler; く becomes いて (a kite); ぐ becomes いで; す becomes して. 行く is the VIP exception car: 行っ...", "note": "godan: う/つ/る→って · む/ぶ/ぬ→んで · く→いて · ぐ→いで · す→して · exception 行く→行って | ichidan: 〜る→〜て | す...", "anchor": "garden/torii-gate"}, {"title": "〜て（連結）", "sub": "grammar", "en": "Chain actions with て: each verb-car couples to the next and the tense rides only on the LAST verb. The palace route itself is the sentence: 起きて、入って、食べて、出て、勉強します。", "note": "verb-て + verb-て + … + final verb (tense)", "anchor": "garden/torii-gate"}, {"title": "〜てから", "sub": "grammar", "en": "Ticket-gate order: the first action must FULLY pass through before the next begins. てから = after doing ~ (strict sequence).", "note": "verb-て + から", "anchor": "garden/torii-gate"}, {"title": "〜ている", "sub": "grammar", "en": "A car parked inside the gate with its engine still running: an ongoing action or a resulting state. 泳いでいます = is swimming (right now); 結婚しています = is married (state).", "note": "verb-て + いる", "anchor": "garden/torii-gate"}, {"title": "〜てみる", "sub": "grammar", "en": "Try it and SEE (みる = to see): hold the action up to the lantern light to test it. てみる = try doing ~ (and see how it goes).", "note": "verb-て + みる", "anchor": "garden/stone-lantern"}, {"title": "〜てしまう", "sub": "grammar", "en": "The lantern lies SMASHED on the ground: an action completed with regret, or finished completely and irreversibly. てしまう = end up doing / do it all.", "note": "verb-て + しまう", "anchor": "garden/stone-lantern"}, {"title": "〜たり〜たりする", "sub": "grammar", "en": "The lantern flickers between two states: sometimes bright, sometimes dim. たり lists example actions, non-exhaustive — do things like ~ and ~.", "note": "verb-たり + verb-たり + する", "anchor": "garden/stone-lantern"}, {"title": "〜か", "sub": "grammar", "en": "The kana か is shaped like a HOOK: hang it on the end of any statement and it swings the sentence up into a question. No word-order change needed.", "note": "statement + か (rising intonation in casual speech)", "anchor": "study/writing-desk"}, {"title": "疑問詞", "sub": "grammar", "en": "Five pigeonholes on the desk, one per question word: 何 what (a box), どこ where (a map pin), いつ when (a clock), だれ who (a silhouette), どう how (a toolbox). The question word stays IN the sentence where the answer would g...", "note": "Q-word in place of the unknown + か | 何＝what · どこ＝where · いつ＝when · だれ＝who · どう＝how · どの...", "anchor": "study/writing-desk"}, {"title": "〜てもいいですか", "sub": "grammar", "en": "Permission window at the desk: you slide your て-form action under the glass and the clerk stamps いいですよ. てもいいですか = may I ~? Bridge card: て-form + question in one move.", "note": "verb-て + もいいですか | answer: はい、いいですよ / だめです", "anchor": "study/writing-desk"}, {"title": "〜てくれる？", "sub": "grammar", "en": "A gift handed DOWN to you across the desk: someone does the action for your benefit. てくれる = they do ~ for me; as a casual request: てくれる？ / more polite: てもらえますか.", "note": "verb-て + くれる / もらう | request: 〜てくれる？ → 〜てもらえますか (politer)", "anchor": "study/writing-desk"}, {"title": "どれ・どっち", "sub": "grammar", "en": "Two books or a whole shelf? どっち chooses between TWO things (どちら casual); どれ picks from THREE or more. The shelf holds many books (どれ); the scale compares two (どっち).", "note": "AとBでは、どっちが〜 | どれが好きですか", "anchor": "study/bookshelf"}, {"title": "〜れる／〜られる", "sub": "grammar", "en": "Potential form: can do. The gate's second machine swaps a car's engine instead of adding a clamp: godan cars get the える engine (飲む→飲める, 走る→走れる); ichidan stretch to られる (食べる→食べられる); VIP cars: する→できる, 来る→来（こ）られる. Trap: ...", "note": "godan: う-row→え-row + る (行く→行ける) | ichidan: る→られる | する→できる · 来る→来られる", "anchor": "garden/torii-gate"}, {"title": "選ぶ", "sub": "えらぶ", "en": "to choose", "note": "verb (godan)", "anchor": "study/bookshelf"}, {"title": "飛ぶ", "sub": "とぶ", "en": "to fly; to jump", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "歩く", "sub": "あるく", "en": "to walk", "note": "verb (godan)", "anchor": "garden/torii-gate"}, {"title": "撮る", "sub": "とる", "en": "to take (a photo)", "note": "verb (godan)", "anchor": "garden/stone-lantern"}, {"title": "言う", "sub": "いう", "en": "to say", "note": "verb (godan)", "anchor": "study/writing-desk"}, {"title": "引退する", "sub": "いんたいする", "en": "to retire (from sport)", "note": "verb (suru)", "anchor": "study/ink-stone"}, {"title": "資格", "sub": "しかく", "en": "qualification; license", "note": "noun", "anchor": "study/bookshelf"}, {"title": "必要", "sub": "ひつよう", "en": "necessary; needed", "note": "na-adjective / noun", "anchor": "study/bookshelf"}, {"title": "骨折", "sub": "こっせつ", "en": "bone fracture", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "半分", "sub": "はんぶん", "en": "half", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "筋肉痛", "sub": "きんにくつう", "en": "muscle pain; sore muscles", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "かかと", "sub": "かかと", "en": "heel", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "脳", "sub": "のう", "en": "brain", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "医者", "sub": "いしゃ", "en": "doctor", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "レントゲン", "sub": "レントゲン", "en": "X-ray", "note": "noun", "anchor": "bath/wooden-tub"}, {"title": "五段動詞", "sub": "ごだんどうし", "en": "godan (u-verbs): the stem ends in a consonant. ます-form: u-row to i-row (飲む→飲みます). Te-form needs the presses in the workshop.", "note": "verb group", "anchor": "annex/sorting-sign"}, {"title": "一段動詞", "sub": "いちだんどうし", "en": "ichidan (ru-verbs): drop る, add ます (食べる→食べます). Te-form is easy: drop る + て (食べて).", "note": "verb group", "anchor": "annex/sorting-sign"}, {"title": "不規則動詞", "sub": "ふきそくどうし", "en": "irregular: only する→します and 来る→来（き）ます. Every noun+する belongs here too (勉強する).", "note": "verb group", "anchor": "annex/sorting-sign"}, {"title": "帰る・入る・走る", "sub": "かえる・はいる・はしる", "en": "TRAP: they end in 〜eru/〜iru but are godan! 帰ります・入ります・走ります. Same trap: 切る・知る・減る.", "note": "trap", "anchor": "annex/sorting-sign"}, {"title": "歌う", "sub": "うたう", "en": "to sing — 歌います・歌って", "note": "verb (godan)", "anchor": "annex/godan-crate"}, {"title": "笑う", "sub": "わらう", "en": "to laugh; to smile — 笑います・笑って", "note": "verb (godan)", "anchor": "annex/godan-crate"}, {"title": "会う", "sub": "あう", "en": "to meet — 会います・会って", "note": "verb (godan)", "anchor": "annex/godan-crate"}, {"title": "遊ぶ", "sub": "あそぶ", "en": "to play — 遊びます・遊んで", "note": "verb (godan)", "anchor": "annex/godan-crate"}, {"title": "見る", "sub": "みる", "en": "to see; to watch — 見ます・見て", "note": "verb (ichidan)", "anchor": "annex/ichidan-crate"}, {"title": "教える", "sub": "おしえる", "en": "to teach; to tell — 教えます・教えて", "note": "verb (ichidan)", "anchor": "annex/ichidan-crate"}, {"title": "借りる", "sub": "かりる", "en": "to borrow — 借ります・借りて", "note": "verb (ichidan)", "anchor": "annex/ichidan-crate"}, {"title": "答える", "sub": "こたえる", "en": "to answer — 答えます・答えて", "note": "verb (ichidan)", "anchor": "annex/ichidan-crate"}, {"title": "勉強する", "sub": "べんきょうする", "en": "to study — 勉強します・勉強して", "note": "verb (irregular)", "anchor": "annex/irregular-crate"}, {"title": "運転する", "sub": "うんてんする", "en": "to drive — 運転します・運転して", "note": "verb (irregular)", "anchor": "annex/irregular-crate"}, {"title": "う・つ・る→って", "sub": "う・つ・る は って", "en": "the small-つ press: 買う→買って, 待つ→待って, 帰る→帰って", "note": "te-form rule", "anchor": "annex/te-rule-rail"}, {"title": "む・ぶ・ぬ→んで", "sub": "む・ぶ・ぬ は んで", "en": "the n-press: 飲む→飲んで, 遊ぶ→遊んで, 死ぬ→死んで", "note": "te-form rule", "anchor": "annex/te-rule-rail"}, {"title": "く→いて", "sub": "く は いて", "en": "the k-saw: 書く→書いて, 聞く→聞いて", "note": "te-form rule", "anchor": "annex/te-rule-rail"}, {"title": "ぐ→いで", "sub": "ぐ は いで", "en": "the g-saw: 泳ぐ→泳いで, 脱ぐ→脱いで", "note": "te-form rule", "anchor": "annex/te-rule-rail"}, {"title": "す→して", "sub": "す は して", "en": "the s-thread: 話す→話して, 出す→出して", "note": "te-form rule", "anchor": "annex/te-rule-rail"}, {"title": "行く→行って", "sub": "いく は いって", "en": "EXCEPTION: not 行いて! The only irregular te-form. The VIP stamp.", "note": "te-form rule", "anchor": "annex/te-rule-rail"}, {"title": "〜てください", "sub": "てください", "en": "please do: 見てください (please look). The polite request.", "note": "te-form use", "anchor": "annex/te-usage-rack"}, {"title": "〜てはいけない", "sub": "てはいけない", "en": "must not: ここで写真を撮ってはいけません (no photos here).", "note": "te-form use", "anchor": "annex/te-usage-rack"}, {"title": "〜ておく", "sub": "ておく", "en": "do in advance: 予約しておきます (I'll book it ahead).", "note": "te-form use", "anchor": "annex/te-usage-rack"}, {"title": "〜ても", "sub": "ても", "en": "even if: 雨が降っても、行きます (I'll go even if it rains).", "note": "te-form use", "anchor": "annex/te-usage-rack"}, {"title": "〜てあげる", "sub": "てあげる", "en": "do something for someone: 本を貸してあげます (I'll lend you the book).", "note": "te-form use", "anchor": "annex/te-usage-rack"}, {"title": "〜てもらう", "sub": "てもらう", "en": "receive a favor: 友達に教えてもらいます (a friend teaches me).", "note": "te-form use", "anchor": "annex/te-usage-rack"}, {"title": "飲んで", "sub": "のんで", "en": "te-form of 飲む — the n-press product (む→んで).", "note": "sample product", "anchor": "annex/te-bench"}, {"title": "食べて", "sub": "たべて", "en": "te-form of 食べる — ichidan just drops る. No press needed.", "note": "sample product", "anchor": "annex/te-bench"}, {"title": "い形容詞", "sub": "いけいようし", "en": "i-adjectives end in 〜い and conjugate themselves: 高くない・高かった・高くて. Never add だ!", "note": "adjective rule", "anchor": "annex/i-wall"}, {"title": "高い", "sub": "たかい", "en": "high; expensive — 高くない・高かった", "note": "i-adjective", "anchor": "annex/i-wall"}, {"title": "安い", "sub": "やすい", "en": "cheap — 安くない・安かった", "note": "i-adjective", "anchor": "annex/i-wall"}, {"title": "おいしい", "sub": "おいしい", "en": "tasty — おいしくない・おいしかった", "note": "i-adjective", "anchor": "annex/i-wall"}, {"title": "楽しい", "sub": "たのしい", "en": "fun — 楽しくない・楽しかった", "note": "i-adjective", "anchor": "annex/i-wall"}, {"title": "な形容詞", "sub": "なけいようし", "en": "na-adjectives are noun-like: 静かだ・静かな町・静かではない. Add な before a noun.", "note": "adjective rule", "anchor": "annex/na-wall"}, {"title": "静かな", "sub": "しずかな", "en": "quiet — 静かな町・静かではない", "note": "na-adjective", "anchor": "annex/na-wall"}, {"title": "便利な", "sub": "べんりな", "en": "convenient — 便利な店・便利ではない", "note": "na-adjective", "anchor": "annex/na-wall"}, {"title": "有名な", "sub": "ゆうめいな", "en": "famous — 有名な人・有名ではない", "note": "na-adjective", "anchor": "annex/na-wall"}, {"title": "大切な", "sub": "たいせつな", "en": "important; precious — 大切な物・大切ではない", "note": "na-adjective", "anchor": "annex/na-wall"}, {"title": "きれいな", "sub": "きれいな", "en": "TRAP: ends in 〜い but is a na-adjective! きれいな花, and the negative is きれいではない, never きれくない.", "note": "trap", "anchor": "annex/trap-pedestal"}, {"title": "〜たい", "sub": "たい", "en": "want to: ます-stem + たい (食べたい). Conjugates like an i-adjective: たくない・たかった. Object が or を.", "note": "desire", "anchor": "annex/tai-board"}, {"title": "〜たがる", "sub": "たがる", "en": "for other people's wants: 彼は行きたがる (he wants to go). Never たい for third person.", "note": "desire", "anchor": "annex/tai-board"}, {"title": "食べたい", "sub": "たべたい", "en": "want to eat — ラーメンが食べたいです。", "note": "example", "anchor": "annex/tai-board"}, {"title": "行きたい", "sub": "いきたい", "en": "want to go — 日本に行きたいです。", "note": "example", "anchor": "annex/tai-board"}, {"title": "飲みたい", "sub": "のみたい", "en": "want to drink — 水が飲みたいです。", "note": "example", "anchor": "annex/tai-board"}, {"title": "ことができる", "sub": "ことができる", "en": "can (formal): dictionary form + ことができる (泳ぐことができる). Same meaning as the potential form.", "note": "potential", "anchor": "annex/potential-machine"}, {"title": "見える・聞こえる", "sub": "みえる・きこえる", "en": "naturally visible / audible, not 'can': 山が見える (the mountain is visible). Takes が.", "note": "potential", "anchor": "annex/potential-machine"}, {"title": "泳げる", "sub": "およげる", "en": "can swim — 200メートル泳げます。", "note": "potential", "anchor": "annex/potential-machine"}, {"title": "話せる", "sub": "はなせる", "en": "can speak — 日本語が少し話せます。", "note": "potential", "anchor": "annex/potential-machine"}, {"title": "運転できる", "sub": "うんてんできる", "en": "can drive — noun+する drops する: 運転ができる.", "note": "potential", "anchor": "annex/potential-machine"}];
 const PARAMS = new URLSearchParams(location.search);
 
 // ---------- renderer / scene / camera ----------
@@ -97,8 +98,8 @@ scene.add(new THREE.HemisphereLight(0x35405a, 0x1a140e, 0.35));      // faint mo
 const moon = new THREE.DirectionalLight(0x8fa8d0, 0.35);             // cool moonlight
 moon.position.set(-8, 14, -6); moon.castShadow = true;
 moon.shadow.mapSize.set(2048, 2048);
-moon.shadow.camera.left = -18; moon.shadow.camera.right = 18;
-moon.shadow.camera.top = 18; moon.shadow.camera.bottom = -18;
+moon.shadow.camera.left = -20; moon.shadow.camera.right = 34;
+moon.shadow.camera.top = 20; moon.shadow.camera.bottom = -20;
 scene.add(moon);
 
 function pointGlow(x, y, z, color = 0xffb96a, intensity = 14, dist = 9) {
@@ -193,7 +194,10 @@ function wallSeg(x1, z1, x2, z2, h = 3.4) {
 }
 // perimeter
 wallSeg(-13.7, -13.7, 13.7, -13.45); wallSeg(-13.7, 13.45, 13.7, 13.7);
-wallSeg(-13.7, -13.7, -13.45, 13.7); wallSeg(13.45, -13.7, 13.7, 13.7);
+wallSeg(-13.7, -13.7, -13.45, 13.7);
+// east perimeter: door gaps to the grammar annex at z=-7 (shrine), z=-2.5 (kitchen), z=7 (station)
+wallSeg(13.45, -13.7, 13.7, -8.1); wallSeg(13.45, -5.9, 13.7, -3.6);
+wallSeg(13.45, -1.4, 13.7, 5.9); wallSeg(13.45, 8.1, 13.7, 13.7);
 // internal 3x3 grid: doors (2.2 wide) between all neighboring rooms
 function wallLine(vertical, at, gaps) {
   const from = -13.575, to = 13.575;
@@ -280,6 +284,78 @@ ball(0.35, new THREE.MeshStandardMaterial({ color: 0x4a6b8a, roughness: .9 }), -
 ball(0.35, new THREE.MeshStandardMaterial({ color: 0x4a6b8a, roughness: .9 }), -8.7, 0.1, 9.5, scene, 0.35);
 chochinLantern(-9.5, 2.8, 9.5, 0.9);
 
+// ═══════════ GRAMMAR ANNEX (east wing, 2x2 rooms) ═══════════
+// layout: A Sorting Hall (17.7,-4.75) · B Te-form Workshop (17.7,4.75)
+//         C Adjective Gallery (27.2,-4.75) · D Desire & Potential (27.2,4.75)
+// doors: shrine->A (z=-7), kitchen->A (z=-2.5), station->B (z=7),
+//         A<->B (x=17.7 on z=0 wall), C<->D (x=27.2 on z=0 wall), A<->C / B<->D (x=22.45 wall)
+floorRect(17.7, -4.75, 7.9, 7.9, M.woodMid, true);   // A: sorting hall
+floorRect(17.7, 4.75, 7.9, 7.9, M.woodDark, true);   // B: te-form workshop
+floorRect(27.2, -4.75, 7.9, 7.9, M.tatami);          // C: adjective gallery
+floorRect(27.2, 4.75, 7.9, 7.9, M.woodMid, true);    // D: desire & potential
+// wing perimeter
+wallSeg(13.7, -9.0, 31.45, -8.75); wallSeg(13.7, 8.75, 31.45, 9.0);
+wallSeg(31.2, -9.0, 31.45, 9.0);
+// internal: z=0 wall (gaps at x=17.7, 27.2), x=22.45 wall (gaps at z=-4.75, 4.75)
+wallSeg(13.7, -0.125, 16.6, 0.125); wallSeg(18.8, -0.125, 26.1, 0.125); wallSeg(28.3, -0.125, 31.2, 0.125);
+wallSeg(22.325, -8.75, 22.575, -5.85); wallSeg(22.325, -3.65, 22.575, 3.65); wallSeg(22.325, 5.85, 22.575, 8.75);
+
+// --- A: SORTING HALL — verb groups get sorted into three crates ---
+// rule signboard on the north wall
+box(3.6, 1.2, 0.08, M.woodDark, 17.7, 1.9, -8.63);
+box(3.8, 0.1, 0.12, M.woodLight, 17.7, 2.55, -8.63);
+// three crates: godan (left), ichidan (mid), irregular (right)
+box(1.5, 0.8, 0.9, M.woodMid, 15.9, 0.4, -6.2);
+box(1.5, 0.8, 0.9, M.woodLight, 17.7, 0.4, -6.2);
+box(1.5, 0.8, 0.9, M.red, 19.5, 0.4, -6.2);
+// crate slats
+for (const cx of [15.9, 17.7, 19.5]) for (let i = 0; i < 2; i++)
+  box(1.5, 0.06, 0.06, M.woodDark, cx, 0.28 + i * 0.3, -5.73);
+chochinLantern(17.7, 3.0, -4.75, 1.1);
+pointGlow(17.7, 2.4, -7.6, 0xffc070, 10, 6);          // wash the signboard
+pointGlow(17.7, 1.6, -5.0, 0xffc070, 8, 5);           // and the crates
+
+// --- B: TE-FORM WORKSHOP — stamping presses transform dictionary forms ---
+// workbench with 5 little stamp machines
+box(3.6, 0.9, 1.0, M.woodMid, 17.7, 0.45, 6.3);
+for (let i = 0; i < 5; i++) {
+  box(0.36, 0.4, 0.36, M.iron, 16.3 + i * 0.7, 1.1, 6.3);
+  cyl(0.05, 0.05, 0.3, M.woodDark, 16.3 + i * 0.7, 1.45, 6.3, scene, 8);
+}
+// rule rail above the bench (rule cards hang here, facing the room)
+cyl(0.03, 0.03, 4.8, M.iron, 17.7, 2.15, 6.3, scene, 8).rotation.z = Math.PI / 2;
+for (let i = 0; i < 6; i++) rod(15.7 + i * 0.8, 2.15, 6.3, 15.7 + i * 0.8, 2.08, 6.3, 0.008, M.iron);
+// usage rack against the south wall
+box(3.0, 1.8, 0.35, M.woodDark, 17.7, 0.9, 1.2);
+box(3.2, 0.08, 0.45, M.woodLight, 17.7, 1.82, 1.2);
+chochinLantern(17.7, 3.0, 4.75, 1.1);
+pointGlow(17.7, 2.4, 5.6, 0xffc070, 10, 6);           // warm the bench + rail
+pointGlow(17.7, 1.8, 2.2, 0xffc070, 7, 5);            // and the usage rack
+
+// --- C: ADJECTIVE GALLERY — い-wall north vs な-wall south, trap on a pedestal ---
+// display panels
+box(4.6, 1.6, 0.08, M.white, 27.2, 1.7, -8.63);       // い-panel
+box(4.6, 1.6, 0.08, M.plaster, 27.2, 1.7, -0.87);     // な-panel
+// trap pedestal in the middle with its own spotlight
+cyl(0.3, 0.4, 1.0, M.stoneDark, 26.5, 0.5, -4.75, scene, 12);
+pointGlow(26.5, 2.2, -4.75, 0xffd090, 9, 4);
+chochinLantern(27.2, 3.0, -4.75, 1.1);
+pointGlow(27.2, 2.2, -7.9, 0xffc070, 9, 5);           // い-wall wash
+pointGlow(27.2, 2.2, -1.6, 0xffc070, 9, 5);           // な-wall wash
+
+// --- D: DESIRE & POTENTIAL PAVILION — wishing fountain + power machine ---
+// fountain (decor)
+cyl(1.1, 1.25, 0.7, M.stone, 27.2, 0.35, 4.75, scene, 24);
+const wishWater = new THREE.Mesh(new THREE.CircleGeometry(1.05, 28), M.water);
+wishWater.rotation.x = -Math.PI / 2; wishWater.position.set(27.2, 0.68, 4.75); scene.add(wishWater);
+cyl(0.12, 0.18, 0.9, M.stoneDark, 27.2, 0.9, 4.75, scene, 10);
+// power machine against the south wall
+box(2.4, 2.0, 0.6, M.iron, 27.2, 1.0, 8.3);
+box(2.6, 0.2, 0.8, M.red, 27.2, 2.1, 8.3);
+chochinLantern(27.2, 3.0, 4.75, 1.1);
+pointGlow(29.9, 2.0, 4.75, 0xffc070, 9, 5);           // tai board wash (east wall)
+pointGlow(27.2, 2.2, 7.4, 0xff8055, 9, 5);            // power machine wash
+
 // ═══════════ BEDROOM ═══════════
 box(2.0, 0.28, 1.2, M.white, -10.5, 0.14, 1.2);                       // futon
 box(0.6, 0.18, 0.4, M.white, -11.1, 0.36, 0.72);                      // pillow (head edge, clear of the cards)
@@ -330,13 +406,13 @@ const rack = new THREE.Group();
 for (const x of [-0.9, 0.9]) cyl(0.05, 0.05, 1.8, M.woodDark, x, 0.9, 0, rack, 10);
 const rackBar = cyl(0.04, 0.04, 1.9, M.woodMid, 0, 1.75, 0, rack, 10); rackBar.rotation.z = Math.PI / 2;
 rack.position.set(2, 0, 11.3); rack.rotation.y = -0.4; scene.add(rack);
-// bath props: stool, bucket, mirror
+// bath props: stool, bucket; mirror + first-aid cabinet (救急箱) hang on the west wall face (x=-5.35), north of the bedroom door lane
 cyl(0.3, 0.34, 0.3, M.woodLight, 0.4, 0.15, 11.8, scene, 12);
 cyl(0.28, 0.24, 0.36, M.woodLight, 0.9, 0.18, 12.2, scene, 12);
-box(1.2, 1.6, 0.06, new THREE.MeshStandardMaterial({ color: 0x9fb8c0, roughness: .1, metalness: .6 }), -3.9, 1.4, 11.5);
-// first-aid cabinet (救急箱) for the injury story
-box(0.25, 1.3, 0.9, M.white, -3.8, 1.1, 10.2);
-box(0.02, 0.18, 0.07, M.red, -3.66, 1.67, 10.2); box(0.02, 0.07, 0.18, M.red, -3.66, 1.67, 10.2);
+box(0.06, 1.6, 1.2, new THREE.MeshStandardMaterial({ color: 0x9fb8c0, roughness: .1, metalness: .6 }), -5.32, 1.4, 12.6);
+box(0.25, 1.3, 0.9, M.white, -5.2, 1.1, 11.15);
+box(0.02, 0.18, 0.07, M.red, -5.06, 1.67, 11.15); box(0.02, 0.07, 0.18, M.red, -5.06, 1.67, 11.15);
+pointGlow(-4.6, 1.9, 11.6, 0xffc070, 7, 5);                                  // warm the mirror wall
 chochinLantern(0, 3.0, 9.5, 1.1);
 
 // ═══════════ KITCHEN ═══════════
@@ -457,11 +533,11 @@ const SLOTS = {
   'bath/wooden-tub': { style: 'flat', s: 0.75, slots: [
     // the 3 touch-temperature cards float on the water, tilted toward the door, text facing the approach
     { p: [-1.95, 1.02, 8.55], tilt: -0.25, flipTex: true }, { p: [-0.9, 1.02, 8.9], tilt: -0.25, flipTex: true }, { p: [-1.75, 1.02, 9.5], tilt: -0.25, flipTex: true },
-    // the 7 injury-story cards live on the first-aid cabinet (救急箱) by the mirror
-    { p: [-3.66, 0.7, 9.95], ry: Math.PI / 2, upright: true, s: 0.45 }, { p: [-3.66, 0.7, 10.45], ry: Math.PI / 2, upright: true, s: 0.45 },
-    { p: [-3.66, 0.96, 9.95], ry: Math.PI / 2, upright: true, s: 0.45 }, { p: [-3.66, 0.96, 10.45], ry: Math.PI / 2, upright: true, s: 0.45 },
-    { p: [-3.66, 1.22, 9.95], ry: Math.PI / 2, upright: true, s: 0.45 }, { p: [-3.66, 1.22, 10.45], ry: Math.PI / 2, upright: true, s: 0.45 },
-    { p: [-3.66, 1.48, 10.2], ry: Math.PI / 2, upright: true, s: 0.45 } ] },
+    // the 7 injury-story cards live on the first-aid cabinet (救急箱) on the west wall
+    { p: [-5.06, 0.7, 10.9], ry: Math.PI / 2, upright: true, s: 0.45 }, { p: [-5.06, 0.7, 11.4], ry: Math.PI / 2, upright: true, s: 0.45 },
+    { p: [-5.06, 0.96, 10.9], ry: Math.PI / 2, upright: true, s: 0.45 }, { p: [-5.06, 0.96, 11.4], ry: Math.PI / 2, upright: true, s: 0.45 },
+    { p: [-5.06, 1.22, 10.9], ry: Math.PI / 2, upright: true, s: 0.45 }, { p: [-5.06, 1.22, 11.4], ry: Math.PI / 2, upright: true, s: 0.45 },
+    { p: [-5.06, 1.48, 11.15], ry: Math.PI / 2, upright: true, s: 0.45 } ] },
   'bath/towel-rack': { style: 'towel', s: 1, slots: [
     { p: [1.4, 1.22, 11.05], ry: Math.PI - 0.4 }, { p: [2, 1.22, 11.3], ry: Math.PI - 0.4 }, { p: [2.6, 1.22, 11.55], ry: Math.PI - 0.4 } ] },
   'kitchen/cutting-board': { style: 'flat', s: 0.55, slots: [
@@ -512,6 +588,42 @@ const SLOTS = {
     // one straight row of slips along the desk's back edge
     { p: [-0.45, 0.86, -10.15], ry: 0 }, { p: [-0.15, 0.86, -10.15], ry: 0 },
     { p: [0.15, 0.86, -10.15], ry: 0 }, { p: [0.45, 0.86, -10.15], ry: 0 } ] },
+  // ═══ grammar annex ═══
+  'annex/sorting-sign': { style: 'hang', s: 0.62, slots: [
+    { p: [16.35, 1.9, -8.58], ry: 0 }, { p: [17.05, 1.9, -8.58], ry: 0 },
+    { p: [17.75, 1.9, -8.58], ry: 0 }, { p: [18.45, 1.9, -8.58], ry: 0 } ] },
+  'annex/godan-crate': { style: 'hang', s: 0.45, slots: [
+    { p: [15.57, 0.32, -5.74], ry: 0 }, { p: [16.23, 0.32, -5.74], ry: 0 },
+    { p: [15.57, 0.68, -5.74], ry: 0 }, { p: [16.23, 0.68, -5.74], ry: 0 } ] },
+  'annex/ichidan-crate': { style: 'hang', s: 0.45, slots: [
+    { p: [17.37, 0.32, -5.74], ry: 0 }, { p: [18.03, 0.32, -5.74], ry: 0 },
+    { p: [17.37, 0.68, -5.74], ry: 0 }, { p: [18.03, 0.68, -5.74], ry: 0 } ] },
+  'annex/irregular-crate': { style: 'hang', s: 0.45, slots: [
+    { p: [19.17, 0.5, -5.74], ry: 0 }, { p: [19.83, 0.5, -5.74], ry: 0 } ] },
+  'annex/te-rule-rail': { style: 'hang', s: 0.62, slots: [
+    { p: [15.7, 1.85, 6.32], ry: Math.PI }, { p: [16.5, 1.85, 6.32], ry: Math.PI },
+    { p: [17.3, 1.85, 6.32], ry: Math.PI }, { p: [18.1, 1.85, 6.32], ry: Math.PI },
+    { p: [18.9, 1.85, 6.32], ry: Math.PI }, { p: [19.7, 1.85, 6.32], ry: Math.PI } ] },
+  'annex/te-usage-rack': { style: 'hang', s: 0.55, slots: [
+    { p: [16.75, 0.6, 1.39], ry: 0 }, { p: [17.7, 0.6, 1.39], ry: 0 }, { p: [18.65, 0.6, 1.39], ry: 0 },
+    { p: [16.75, 1.2, 1.39], ry: 0 }, { p: [17.7, 1.2, 1.39], ry: 0 }, { p: [18.65, 1.2, 1.39], ry: 0 } ] },
+  'annex/te-bench': { style: 'flat', s: 0.55, slots: [
+    { p: [16.5, 0.92, 5.9] }, { p: [18.9, 0.92, 5.9] } ] },
+  'annex/i-wall': { style: 'hang', s: 0.6, slots: [
+    { p: [25.4, 1.7, -8.58], ry: 0 }, { p: [26.3, 1.7, -8.58], ry: 0 }, { p: [27.2, 1.7, -8.58], ry: 0 },
+    { p: [28.1, 1.7, -8.58], ry: 0 }, { p: [29.0, 1.7, -8.58], ry: 0 } ] },
+  'annex/na-wall': { style: 'hang', s: 0.6, slots: [
+    { p: [25.4, 1.7, -0.92], ry: Math.PI }, { p: [26.3, 1.7, -0.92], ry: Math.PI }, { p: [27.2, 1.7, -0.92], ry: Math.PI },
+    { p: [28.1, 1.7, -0.92], ry: Math.PI }, { p: [29.0, 1.7, -0.92], ry: Math.PI } ] },
+  'annex/trap-pedestal': { style: 'hang', s: 0.6, slots: [
+    { p: [26.08, 1.3, -4.75], ry: -Math.PI / 2 } ] },
+  'annex/tai-board': { style: 'hang', s: 0.6, slots: [
+    { p: [31.15, 1.9, 3.3], ry: -Math.PI / 2 }, { p: [31.15, 1.9, 4.05], ry: -Math.PI / 2 },
+    { p: [31.15, 1.9, 4.8], ry: -Math.PI / 2 }, { p: [31.15, 1.9, 5.55], ry: -Math.PI / 2 },
+    { p: [31.15, 1.9, 6.3], ry: -Math.PI / 2 } ] },
+  'annex/potential-machine': { style: 'hang', s: 0.55, slots: [
+    { p: [26.5, 0.75, 7.99], ry: Math.PI }, { p: [27.2, 0.75, 7.99], ry: Math.PI }, { p: [27.9, 0.75, 7.99], ry: Math.PI },
+    { p: [26.85, 1.3, 7.99], ry: Math.PI }, { p: [27.55, 1.3, 7.99], ry: Math.PI } ] },
 };
 const FALLBACK = { pos: [0, 2.2, 0], r: 3.0 };
 
@@ -570,8 +682,8 @@ const SOLIDS = [
   ['tub', -1.4, 0.55, 9, 2.9, 1.1, 2.9, ['bath/wooden-tub']],
   ['bath-stool', 0.4, 0.15, 11.8, 0.7, 0.3, 0.7, []],
   ['bath-bucket', 0.9, 0.18, 12.2, 0.6, 0.36, 0.6, []],
-  ['first-aid-cabinet', -3.8, 1.1, 10.2, 0.25, 1.3, 0.9, ['bath/wooden-tub']],
-  ['mirror', -3.9, 1.4, 11.5, 1.2, 1.6, 0.06, []],
+  ['first-aid-cabinet', -5.2, 1.1, 11.15, 0.25, 1.3, 0.9, ['bath/wooden-tub']],
+  ['mirror', -5.32, 1.4, 12.6, 0.06, 1.6, 1.2, []],
   ['rack-post-a', 1.17, 0.9, 10.95, 0.1, 1.8, 0.1, ['bath/towel-rack']],
   ['rack-post-b', 2.83, 0.9, 11.65, 0.1, 1.8, 0.1, ['bath/towel-rack']],
   ['counter', 9, 0.45, -2.8, 3.0, 0.9, 1.0, ['kitchen/cutting-board']],
@@ -596,12 +708,28 @@ const SOLIDS = [
   ['bench', 8.2, 0.22, 11.85, 1.6, 0.45, 0.5, []],
   ['platform', 9.5, 0.03, 12.2, 7.9, 0.16, 2.4, []],
   ['tea-table', -9.5, 0.18, 9.5, 1.4, 0.35, 0.9, []],
+  // grammar annex furniture
+  ['annex-signboard', 17.7, 1.9, -8.63, 3.6, 1.2, 0.08, ['annex/sorting-sign']],
+  ['godan-crate', 15.9, 0.4, -6.2, 1.5, 0.8, 0.9, ['annex/godan-crate']],
+  ['ichidan-crate', 17.7, 0.4, -6.2, 1.5, 0.8, 0.9, ['annex/ichidan-crate']],
+  ['irregular-crate', 19.5, 0.4, -6.2, 1.5, 0.8, 0.9, ['annex/irregular-crate']],
+  ['te-bench', 17.7, 0.45, 6.3, 3.6, 0.9, 1.0, ['annex/te-bench']],
+  ['te-usage-rack', 17.7, 0.9, 1.2, 3.0, 1.8, 0.35, ['annex/te-usage-rack']],
+  ['i-panel', 27.2, 1.7, -8.63, 4.6, 1.6, 0.08, ['annex/i-wall']],
+  ['na-panel', 27.2, 1.7, -0.87, 4.6, 1.6, 0.08, ['annex/na-wall']],
+  ['trap-pedestal', 26.5, 0.5, -4.75, 0.8, 1.0, 0.8, ['annex/trap-pedestal']],
+  ['wish-fountain', 27.2, 0.35, 4.75, 2.5, 0.7, 2.5, []],
+  ['potential-machine', 27.2, 1.0, 8.3, 2.4, 2.0, 0.6, ['annex/potential-machine']],
 ];
 const DOORS = [];
 for (const a of [-5.475, 5.475]) for (const g of [-9.5, 0, 9.5]) {
   DOORS.push({ minX: a - 0.35, maxX: a + 0.35, minY: 0, maxY: 2.2, minZ: g - 1.1, maxZ: g + 1.1 });
   DOORS.push({ minX: g - 1.1, maxX: g + 1.1, minY: 0, maxY: 2.2, minZ: a - 0.35, maxZ: a + 0.35 });
 }
+// annex doors: east perimeter (shrine/kitchen/station), z=0 wall, x=22.45 wall
+for (const z of [-7, -2.5, 7]) DOORS.push({ minX: 13.225, maxX: 13.925, minY: 0, maxY: 2.2, minZ: z - 1.1, maxZ: z + 1.1 });
+for (const x of [17.7, 27.2]) DOORS.push({ minX: x - 1.1, maxX: x + 1.1, minY: 0, maxY: 2.2, minZ: -0.35, maxZ: 0.35 });
+for (const z of [-4.75, 4.75]) DOORS.push({ minX: 22.1, maxX: 22.8, minY: 0, maxY: 2.2, minZ: z - 1.1, maxZ: z + 1.1 });
 const solidBox = ([name, cx, cy, cz, w, h, d, owners]) => ({
   name, owners: owners || [],
   minX: cx - w / 2, maxX: cx + w / 2, minY: cy - h / 2, maxY: cy + h / 2, minZ: cz - d / 2, maxZ: cz + d / 2 });
@@ -711,6 +839,10 @@ const ROOM_INFO = [
   { c: [9.5, 9.5], ja: '駅', en: 'Station', rule: 'deliveries & departures — 届く arrives alone (が), 届ける you deliver (を)' },
   { c: [-9.5, 9.5], ja: '茶室', en: 'Tea Room', rule: 'quiet annex — nothing to recall here, just breathe' },
   { c: [0, 0], ja: '庭園', en: 'Garden', rule: 'water & nature — lotus cards on the pond, tags in the lantern glow' },
+  { c: [17.7, -4.75], ja: '仕分け場', en: 'Sorting Hall', rule: 'every verb lands in a crate — godan, ichidan, or the red irregulars' },
+  { c: [17.7, 4.75], ja: 'て形工房', en: 'Te-form Workshop', rule: 'five presses and one VIP stamp — 行く is the exception' },
+  { c: [27.2, -4.75], ja: '形容詞の間', en: 'Adjective Gallery', rule: 'い-wall vs な-wall — きれいな glows on the trap pedestal' },
+  { c: [27.2, 4.75], ja: 'たいと可能の館', en: 'Desire & Potential', rule: 'wishes at the fountain, powers from the machine' },
 ];
 const roomEl = document.getElementById('roomName'), ruleEl = document.getElementById('roomRule');
 let lastRoom = '';
@@ -736,6 +868,7 @@ addEventListener('keyup', e => keys[e.code] = false);
 addEventListener('pointerdown', () => { if (controls.isLocked) flipLookedAt(); });
 
 const vel = new THREE.Vector3();
+let vy = 0, grounded = true;   // vertical velocity for jumping
 const PR = 0.32;
 function collide(p) {
   for (const c of colliders) {
@@ -774,13 +907,16 @@ function animate() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
 
   if (controls.isLocked) {
-    const speed = keys.ShiftLeft ? 6 : 3.2;
+    const speed = keys.ShiftLeft || keys.ShiftRight ? 8 : 4.6;
     const f = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
     const s = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
     vel.set(s, 0, f).normalize().multiplyScalar(speed * dt);
     controls.moveForward(vel.z);
     controls.moveRight(vel.x);
-    camera.position.y = 1.6;
+    if (keys.Space && grounded) { vy = 4.6; grounded = false; }
+    vy = Math.max(vy - 12 * dt, -9);
+    camera.position.y += vy * dt;
+    if (camera.position.y <= 1.6) { camera.position.y = 1.6; vy = 0; grounded = true; }
     collide(camera.position);
     updateRoom(camera.position.x, camera.position.z);
   }
