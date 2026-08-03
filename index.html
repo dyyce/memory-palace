@@ -14,6 +14,15 @@
   }
   #enter h1 { font-size: 34px; margin: 0; } #enter h1 span { color: #d9a45b; }
   #enter p { opacity: .8; font-size: 14px; line-height: 1.7; margin: 2px; }
+  #resume {
+    position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    z-index: 10; cursor: pointer; background: rgba(15, 10, 7, .45);
+  }
+  #resume span {
+    color: #f5e6d0; font-family: "Hiragino Sans", "Avenir Next", sans-serif; font-size: 15px;
+    background: rgba(20, 12, 8, .82); border: 1px solid #6b4a2f;
+    border-radius: 999px; padding: 10px 22px;
+  }
   #hud {
     position: fixed; top: 14px; left: 14px; color: #f5e6d0; z-index: 5;
     font-family: "Hiragino Sans", "Avenir Next", sans-serif;
@@ -47,8 +56,9 @@
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · Shift to run · Space to jump · E or click to flip · 1/2/3 to grade · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v12 (13 rooms)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v13 (13 rooms)</p>
 </div>
+<div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
 <div id="prog"></div>
 <div id="cross">+</div>
@@ -83,11 +93,25 @@ camera.position.set(0, 1.6, 4.2);
 
 const controls = new PointerLockControls(camera, renderer.domElement);
 const enterEl = document.getElementById('enter');
+const resumeEl = document.getElementById('resume');
+const TUT_KEY = 'palace-tutorial-seen';
 enterEl.addEventListener('click', () => controls.lock());
-controls.addEventListener('lock', () => enterEl.style.display = 'none');
-controls.addEventListener('unlock', () => enterEl.style.display = 'flex');
+resumeEl.addEventListener('click', () => controls.lock());
+controls.addEventListener('lock', () => {
+  enterEl.style.display = 'none';
+  resumeEl.style.display = 'none';
+  localStorage.setItem(TUT_KEY, '1');           // full tutorial shows only on the very first visit
+});
+controls.addEventListener('unlock', () => {
+  (localStorage.getItem(TUT_KEY) ? resumeEl : enterEl).style.display = 'flex';
+});
+if (localStorage.getItem(TUT_KEY)) {            // returning visitor: skip the tutorial
+  enterEl.style.display = 'none';
+  resumeEl.style.display = 'flex';
+}
 if (PARAMS.has('shot')) { // headless verification mode
   enterEl.style.display = 'none';
+  resumeEl.style.display = 'none';
   const c = (PARAMS.get('cam') || '0,1.6,4.2').split(',').map(Number);
   const l = (PARAMS.get('look') || '0,1.2,-2').split(',').map(Number);
   camera.position.set(...c); camera.lookAt(...l);
