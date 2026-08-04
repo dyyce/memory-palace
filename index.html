@@ -52,11 +52,11 @@
 <div id="enter">
   <h1>一日の宮殿 <span>— A Day in Your Life</span></h1>
   <p>寝室 Bedroom → お風呂 Bath → 台所 Kitchen → 庭園 Garden → 図書室 Library → 書斎 Study → 神社 Shrine · 駅 Station annex</p>
-  <p>文法別館 Grammar Annex: 仕分け場 Sorting Hall → て形工房 Te-form Workshop → 形容詞の間 Adjective Gallery → たいと可能の館 Desire &amp; Potential</p>
+  <p>文法別館 Grammar Annex: step into the glowing portal in the 庭園 Garden — 仕分け場 → て形工房 → 形容詞の間 → たいと可能の館</p>
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · Shift to run · Space to jump · E or click to flip · 1/2/3 to grade · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v13 (13 rooms)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-03 · v14 (2 areas, portal-linked)</p>
 </div>
 <div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
@@ -218,10 +218,7 @@ function wallSeg(x1, z1, x2, z2, h = 3.4) {
 }
 // perimeter
 wallSeg(-13.7, -13.7, 13.7, -13.45); wallSeg(-13.7, 13.45, 13.7, 13.7);
-wallSeg(-13.7, -13.7, -13.45, 13.7);
-// east perimeter: door gaps to the grammar annex at z=-7 (shrine), z=-2.5 (kitchen), z=7 (station)
-wallSeg(13.45, -13.7, 13.7, -8.1); wallSeg(13.45, -5.9, 13.7, -3.6);
-wallSeg(13.45, -1.4, 13.7, 5.9); wallSeg(13.45, 8.1, 13.7, 13.7);
+wallSeg(-13.7, -13.7, -13.45, 13.7); wallSeg(13.45, -13.7, 13.7, 13.7);   // east perimeter solid again — the annex is portal-only now
 // internal 3x3 grid: doors (2.2 wide) between all neighboring rooms
 function wallLine(vertical, at, gaps) {
   const from = -13.575, to = 13.575;
@@ -311,8 +308,7 @@ chochinLantern(-9.5, 2.8, 9.5, 0.9);
 // ═══════════ GRAMMAR ANNEX (east wing, 2x2 rooms) ═══════════
 // layout: A Sorting Hall (17.7,-4.75) · B Te-form Workshop (17.7,4.75)
 //         C Adjective Gallery (27.2,-4.75) · D Desire & Potential (27.2,4.75)
-// doors: shrine->A (z=-7), kitchen->A (z=-2.5), station->B (z=7),
-//         A<->B (x=17.7 on z=0 wall), C<->D (x=27.2 on z=0 wall), A<->C / B<->D (x=22.45 wall)
+// reachable ONLY via the garden portal; internal doors: A<->B, C<->D (z=0 wall), A<->C, B<->D (x=22.45 wall)
 floorRect(17.7, -4.75, 7.9, 7.9, M.woodMid, true);   // A: sorting hall
 floorRect(17.7, 4.75, 7.9, 7.9, M.woodDark, true);   // B: te-form workshop
 floorRect(27.2, -4.75, 7.9, 7.9, M.tatami);          // C: adjective gallery
@@ -379,6 +375,48 @@ box(2.6, 0.2, 0.8, M.red, 27.2, 2.1, 8.3);
 chochinLantern(27.2, 3.0, 4.75, 1.1);
 pointGlow(29.9, 2.0, 4.75, 0xffc070, 9, 5);           // tai board wash (east wall)
 pointGlow(27.2, 2.2, 7.4, 0xff8055, 9, 5);            // power machine wash
+
+// ═══════════ PORTALS — magical gates between areas ═══════════
+// Stepping into a ring teleports you to the linked portal's exit point.
+// portalArmed re-arms only after you step OUT of every ring, so you never bounce back.
+const portalFx = [];
+function portalAt(x, z, ry, color = 0x7fe0d0) {
+  const g = new THREE.Group();
+  cyl(0.9, 1.1, 0.25, M.stoneDark, 0, 0.12, 0, g, 20);                      // stone base
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.09, 12, 40),
+    new THREE.MeshStandardMaterial({ color: 0x2b3a42, emissive: color, emissiveIntensity: 1.4, roughness: .4 }));
+  ring.position.y = 1.55; ring.castShadow = true; g.add(ring);
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(0.92, 32),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.25, side: THREE.DoubleSide, depthWrite: false }));
+  disc.position.y = 1.55; g.add(disc);
+  g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
+  pointGlow(x, 1.7, z, color, 10, 6);
+  portalFx.push({ ring, disc });
+  return g;
+}
+// garden portal (by the path, facing west) <-> annex portal (Sorting Hall, facing east)
+portalAt(2.5, 2.8, Math.PI / 2);
+portalAt(14.9, -2.0, -Math.PI / 2, 0xb48cf2);   // violet on the annex side
+const PORTALS = [
+  { x: 2.5, z: 2.8, ex: 16.2, ez: -2.0 },       // garden -> sorting hall
+  { x: 14.9, z: -2.0, ex: 1.2, ez: 2.8 },       // sorting hall -> garden
+];
+let portalArmed = true;
+function checkPortals(p) {
+  let inside = false;
+  for (const o of PORTALS) {
+    const dx = p.x - o.x, dz = p.z - o.z;
+    if (dx * dx + dz * dz < 0.36) {             // trigger radius 0.6
+      inside = true;
+      if (portalArmed) {
+        p.set(o.ex, 1.6, o.ez);
+        portalArmed = false;
+        return;
+      }
+    }
+  }
+  if (!inside) portalArmed = true;
+}
 
 // ═══════════ BEDROOM ═══════════
 box(2.0, 0.28, 1.2, M.white, -10.5, 0.14, 1.2);                       // futon
@@ -744,14 +782,15 @@ const SOLIDS = [
   ['trap-pedestal', 26.5, 0.5, -4.75, 0.8, 1.0, 0.8, ['annex/trap-pedestal']],
   ['wish-fountain', 27.2, 0.35, 4.75, 2.5, 0.7, 2.5, []],
   ['potential-machine', 27.2, 1.0, 8.3, 2.4, 2.0, 0.6, ['annex/potential-machine']],
+  ['garden-portal', 2.5, 1.4, 2.8, 0.5, 2.9, 2.3, []],
+  ['annex-portal', 14.9, 1.4, -2.0, 2.3, 2.9, 0.5, []],
 ];
 const DOORS = [];
 for (const a of [-5.475, 5.475]) for (const g of [-9.5, 0, 9.5]) {
   DOORS.push({ minX: a - 0.35, maxX: a + 0.35, minY: 0, maxY: 2.2, minZ: g - 1.1, maxZ: g + 1.1 });
   DOORS.push({ minX: g - 1.1, maxX: g + 1.1, minY: 0, maxY: 2.2, minZ: a - 0.35, maxZ: a + 0.35 });
 }
-// annex doors: east perimeter (shrine/kitchen/station), z=0 wall, x=22.45 wall
-for (const z of [-7, -2.5, 7]) DOORS.push({ minX: 13.225, maxX: 13.925, minY: 0, maxY: 2.2, minZ: z - 1.1, maxZ: z + 1.1 });
+// annex internal doors: z=0 wall and x=22.45 wall (the east perimeter has no doors — portal-only)
 for (const x of [17.7, 27.2]) DOORS.push({ minX: x - 1.1, maxX: x + 1.1, minY: 0, maxY: 2.2, minZ: -0.35, maxZ: 0.35 });
 for (const z of [-4.75, 4.75]) DOORS.push({ minX: 22.1, maxX: 22.8, minY: 0, maxY: 2.2, minZ: z - 1.1, maxZ: z + 1.1 });
 const solidBox = ([name, cx, cy, cz, w, h, d, owners]) => ({
@@ -942,7 +981,14 @@ function animate() {
     camera.position.y += vy * dt;
     if (camera.position.y <= 1.6) { camera.position.y = 1.6; vy = 0; grounded = true; }
     collide(camera.position);
+    checkPortals(camera.position);
     updateRoom(camera.position.x, camera.position.z);
+  }
+
+  for (const fx of portalFx) {
+    fx.ring.material.emissiveIntensity = 1.2 + Math.sin(t * 2.2) * 0.5;
+    fx.disc.material.opacity = 0.2 + Math.sin(t * 1.7) * 0.1;
+    fx.ring.rotation.z = t * 0.25;
   }
 
   tubWater.position.y = 0.95 + Math.sin(t * 1.4) * 0.015;
