@@ -63,9 +63,9 @@
   <p>寝室 Bedroom → お風呂 Bath → 台所 Kitchen → 庭園 Garden → 図書室 Library → 書斎 Study → 神社 Shrine · 駅 Station annex</p>
   <p>文法別館 Grammar Annex: step into the glowing portal in the 庭園 Garden — 仕分け場 → て形工房 → 形容詞の間 → たいと可能の館</p>
   <p><b>Click to enter</b></p>
-  <p>WASD / arrows to walk · Shift to run · Space to jump · E or click to flip · 1/2/3 = again/good/easy · ESC to release</p>
+  <p>WASD / arrows to walk · Shift to run · Space to jump · C to crouch · E or click to flip · 1/2/3 = again/good/easy · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-05 · v19 (2 areas, portal-linked)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-05 · v20 (2 areas, portal-linked)</p>
 </div>
 <div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
@@ -73,7 +73,7 @@
 <div id="cross">+</div>
 <div id="phint"></div>
 <div id="warp"></div>
-<div id="hint">Shift = run · Space = jump · E / click = flip · 1 again · 2 good · 3 easy · gold = mastered</div>
+<div id="hint">Shift = run · Space = jump · C = crouch · E / click = flip · 1 again · 2 good · 3 easy · gold = mastered</div>
 <script type="importmap">
 { "imports": {
   "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
@@ -354,9 +354,9 @@ box(3.8, 0.1, 0.12, M.woodLight, 17.7, 2.55, -8.63);
 box(1.5, 0.8, 0.9, M.woodMid, 15.9, 0.4, -6.2);
 box(1.5, 0.8, 0.9, M.woodLight, 17.7, 0.4, -6.2);
 box(1.5, 0.8, 0.9, M.red, 19.5, 0.4, -6.2);
-// crate slats
-for (const cx of [15.9, 17.7, 19.5]) for (let i = 0; i < 2; i++)
-  box(1.5, 0.06, 0.06, M.woodDark, cx, 0.28 + i * 0.3, -5.73);
+// crate slats — frame the two card rows, never cross them (rows at y=0.23 / 0.60, half-height 0.1125)
+for (const cx of [15.9, 17.7, 19.5]) for (const sy of [0.04, 0.42, 0.79])
+  box(1.5, 0.06, 0.06, M.woodDark, cx, sy, -5.73);
 chochinLantern(17.7, 3.0, -4.75, 1.1);
 pointGlow(17.7, 2.4, -7.6, 0xffc070, 10, 6);          // wash the signboard
 pointGlow(17.7, 1.6, -5.0, 0xffc070, 8, 5);           // and the crates
@@ -757,13 +757,14 @@ const SLOTS = {
     { p: [16.35, 1.9, -8.58], ry: 0 }, { p: [17.05, 1.9, -8.58], ry: 0 },
     { p: [17.75, 1.9, -8.58], ry: 0 }, { p: [18.45, 1.9, -8.58], ry: 0 } ] },
   'annex/godan-crate': { style: 'hang', s: 0.45, slots: [
-    { p: [15.57, 0.32, -5.74], ry: 0 }, { p: [16.23, 0.32, -5.74], ry: 0 },
-    { p: [15.57, 0.68, -5.74], ry: 0 }, { p: [16.23, 0.68, -5.74], ry: 0 } ] },
+    // rows sit between the slats (slats at y=0.04 / 0.42 / 0.79)
+    { p: [15.57, 0.23, -5.74], ry: 0 }, { p: [16.23, 0.23, -5.74], ry: 0 },
+    { p: [15.57, 0.60, -5.74], ry: 0 }, { p: [16.23, 0.60, -5.74], ry: 0 } ] },
   'annex/ichidan-crate': { style: 'hang', s: 0.45, slots: [
-    { p: [17.37, 0.32, -5.74], ry: 0 }, { p: [18.03, 0.32, -5.74], ry: 0 },
-    { p: [17.37, 0.68, -5.74], ry: 0 }, { p: [18.03, 0.68, -5.74], ry: 0 } ] },
+    { p: [17.37, 0.23, -5.74], ry: 0 }, { p: [18.03, 0.23, -5.74], ry: 0 },
+    { p: [17.37, 0.60, -5.74], ry: 0 }, { p: [18.03, 0.60, -5.74], ry: 0 } ] },
   'annex/irregular-crate': { style: 'hang', s: 0.45, slots: [
-    { p: [19.17, 0.5, -5.74], ry: 0 }, { p: [19.83, 0.5, -5.74], ry: 0 } ] },
+    { p: [19.17, 0.60, -5.74], ry: 0 }, { p: [19.83, 0.60, -5.74], ry: 0 } ] },
   'annex/te-rule-rail': { style: 'hang', s: 0.62, slots: [
     { p: [15.7, 1.85, 6.32], ry: Math.PI }, { p: [16.5, 1.85, 6.32], ry: Math.PI },
     { p: [17.3, 1.85, 6.32], ry: Math.PI }, { p: [18.1, 1.85, 6.32], ry: Math.PI },
@@ -1133,7 +1134,11 @@ function animate() {
     if (keys.Space && grounded) { vy = 4.6; grounded = false; }
     vy = Math.max(vy - 12 * dt, -9);
     camera.position.y += vy * dt;
-    if (camera.position.y <= 1.6) { camera.position.y = 1.6; vy = 0; grounded = true; }
+    const eyeTarget = (keys.KeyC || keys.ControlLeft || keys.ControlRight) ? 0.95 : 1.6;   // crouch
+    if (camera.position.y <= eyeTarget) {
+      if (vy <= 0) { vy = 0; grounded = true; }
+      camera.position.y += (eyeTarget - camera.position.y) * Math.min(1, dt * 10);   // ease up
+    } else if (grounded) camera.position.y += (eyeTarget - camera.position.y) * Math.min(1, dt * 10);   // ease down
     collide(camera.position);
     checkPortals(camera.position);
     updateRoom(camera.position.x, camera.position.z);
