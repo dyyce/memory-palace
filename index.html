@@ -65,7 +65,7 @@
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · Shift to run · Space to jump · E or click to flip · 1/2/3 = again/good/easy · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-04 · v18 (2 areas, portal-linked)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-05 · v19 (2 areas, portal-linked)</p>
 </div>
 <div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
@@ -685,8 +685,9 @@ function spineTexture(title, sub, back) {
 //         towel (the rack towels themselves), spine (book spines), cam (fallback)
 const SLOTS = {
   'bedroom/futon': { style: 'flat', s: 0.75, slots: [
-    { p: [-10.7, 0.33, 1.05] }, { p: [-10.05, 0.33, 1.05] },
-    { p: [-10.7, 0.33, 1.55] }, { p: [-10.05, 0.33, 1.55] } ] },
+    // approached from the garden door (z=0, the -z side) — flipTex so they read upright from there
+    { p: [-10.7, 0.33, 1.05], flipTex: true }, { p: [-10.05, 0.33, 1.05], flipTex: true },
+    { p: [-10.7, 0.33, 1.55], flipTex: true }, { p: [-10.05, 0.33, 1.55], flipTex: true } ] },
   'bedroom/paper-lantern': { style: 'hang', s: 0.55, slots: [
     { p: [-8.5, 1.9, -2], ry: 0.3 }, { p: [-8, 1.55, -2.15], ry: -0.2 }, { p: [-7.5, 2.0, -1.9], ry: 0.5 } ] },
   'bedroom/tansu-chest': { style: 'hang', s: 0.6, slots: [
@@ -771,7 +772,8 @@ const SLOTS = {
     { p: [19.15, 0.6, 1.19], ry: 0 }, { p: [20.1, 0.6, 1.19], ry: 0 }, { p: [21.05, 0.6, 1.19], ry: 0 },
     { p: [19.15, 1.2, 1.19], ry: 0 }, { p: [20.1, 1.2, 1.19], ry: 0 }, { p: [21.05, 1.2, 1.19], ry: 0 } ] },
   'annex/te-bench': { style: 'flat', s: 0.55, slots: [
-    { p: [16.5, 0.92, 5.9] }, { p: [18.9, 0.92, 5.9] } ] },
+    // approached from the Sorting Hall door (z=0, the -z side) — flipTex so they read upright from there
+    { p: [16.5, 0.92, 5.9], flipTex: true }, { p: [18.9, 0.92, 5.9], flipTex: true } ] },
   'annex/i-wall': { style: 'hang', s: 0.6, slots: [
     { p: [25.4, 1.7, -8.58], ry: 0 }, { p: [26.3, 1.7, -8.58], ry: 0 }, { p: [27.2, 1.7, -8.58], ry: 0 },
     { p: [28.1, 1.7, -8.58], ry: 0 }, { p: [29.0, 1.7, -8.58], ry: 0 } ] },
