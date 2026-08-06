@@ -65,7 +65,7 @@
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · Shift to run · Space to jump · C to crouch · E or click to flip · 1/2/3 = again/good/easy · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-05 · v20 (2 areas, portal-linked)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-05 · v21 (2 areas, portal-linked)</p>
 </div>
 <div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
@@ -191,16 +191,63 @@ function ball(r, mat, x, y, z, parent = scene, squashY = 1) {
   m.scale.y = squashY; m.position.set(x, y, z);
   m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
 }
-// hanging paper lantern (chochin) with light
+// soft radial sprite texture (shared by lantern halos, portals, drift particles)
+function sparkTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 32;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(16, 16, 1, 16, 16, 15);
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.4, 'rgba(255,255,255,.45)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 32, 32);
+  return new THREE.CanvasTexture(c);
+}
+const SPARK_TEX = sparkTexture();
+
+// floating paper lantern (chochin) — held aloft by magic: no cord, just a warm
+// halo, a faint rune ring on the floor below, and a gentle bob (see animate)
+const floaters = [];
 function chochinLantern(x, y, z, scale = 1, glow = true) {
   const g = new THREE.Group();
-  cyl(0.02, 0.02, 1.0, M.iron, 0, 0.5 + 0.4 * scale, 0, g, 6);           // cord
   const body = cyl(0.22 * scale, 0.26 * scale, 0.55 * scale, M.chochin, 0, 0, 0, g, 14);
   cyl(0.26 * scale, 0.24 * scale, 0.06, M.woodDark, 0, 0.3 * scale, 0, g, 14);
   cyl(0.24 * scale, 0.26 * scale, 0.06, M.woodDark, 0, -0.3 * scale, 0, g, 14);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: SPARK_TEX, color: 0xffb060, transparent: true, opacity: 0.5,
+    blending: THREE.AdditiveBlending, depthWrite: false }));
+  halo.scale.setScalar(1.5 * scale); g.add(halo);
   g.position.set(x, y, z); scene.add(g);
+  // faint rune ring on the floor underneath — the "spell" that holds it up
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42 * scale, 0.015, 8, 40),
+    new THREE.MeshBasicMaterial({ color: 0xffc888, transparent: true, opacity: 0.3,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+  ring.rotation.x = -Math.PI / 2; ring.position.set(x, 0.04, z); scene.add(ring);
+  floaters.push({ g, halo, ring, baseY: y, phase: rand() * 6.28 });
   if (glow) pointGlow(x, y - 0.1, z, 0xffc070, 12, 7);
   return g;
+}
+
+// drifting particle system (dust, motes, steam wisps, fireflies) — deterministic, animated in the main loop
+const driftSystems = [];
+function drift(cx, cy, cz, o = {}) {
+  const { count = 30, spread = [1, 2, 1], color = 0xffffff, size = 0.2,
+          opacity = 0.4, rise = 0.1, wander = 0.05, blink = false } = o;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3), base = new Float32Array(count * 3), seed = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    base.set([(rand() * 2 - 1) * spread[0], rand() * spread[1], (rand() * 2 - 1) * spread[2]], i * 3);
+    pos.set([base[i * 3], base[i * 3 + 1], base[i * 3 + 2]], i * 3);
+    seed[i] = rand() * 100;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const bc = new THREE.Color(color), carr = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) carr.set([bc.r, bc.g, bc.b], i * 3);
+  geo.setAttribute('color', new THREE.BufferAttribute(carr, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+    map: SPARK_TEX, size, transparent: true, opacity, vertexColors: blink,
+    depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+  pts.position.set(cx, cy, cz); scene.add(pts);
+  driftSystems.push({ geo, base, seed, count, rise, wander, span: spread[1], blink, bc });
+  return pts;
 }
 // small stone lantern; glow=false for decorative instances (light count discipline: emissive carries the look)
 function stoneLanternAt(x, z, s = 1, glow = true) {
@@ -293,6 +340,9 @@ function rod(x1, y1, z1, x2, y2, z2, r, mat) {
 rod(3.0, 1.68, -1.6, 3.45, 0.08, -1.15, 0.015, M.iron);
 cyl(0.08, 0.1, 0.14, M.stoneDark, 3.45, 0.07, -1.15, scene, 8);
 stoneLanternAt(-4.3, 3.8, 0.9, false); stoneLanternAt(4.3, 4.4, 0.9, false);   // decorative: emissive only
+// fireflies drifting over the grass — slow wander, soft green blink
+drift(0, 0.35, 0, { count: 34, spread: [4.6, 1.9, 4.6], color: 0xcdea8a, size: 0.15,
+  opacity: 0.85, rise: 0.05, wander: 0.55, blink: true });
 // stepping-stone path: bath door -> pond -> study door
 const pathStones = [[0, 4.6], [-0.6, 3.6], [-1.4, 2.6], [-2.0, 1.4], [-1.2, 0.2], [-0.4, -1.0], [0, -2.4], [0, -3.8], [0, -4.8]];
 for (const [px, pz] of pathStones) cyl(0.34, 0.38, 0.08, M.stoneDark, px, 0.04, pz, scene, 9);
@@ -315,6 +365,8 @@ for (let i = 0; i < 4; i++) box(0.12, 0.08, 0.9, M.woodLight, 7.6 + i * 0.27, 0.
 box(1.8, 1.6, 1.6, M.woodDark, 12.6, 0.8, -9.75);
 box(2.2, 0.3, 2.0, M.red, 12.6, 1.75, -9.75);
 stoneLanternAt(7.6, -7.6, 0.9, false); stoneLanternAt(7.6, -11.9, 0.9, false); // decorative: emissive only
+drift(10.5, 0.3, -9.75, { count: 36, spread: [1.6, 2.6, 1.4], color: 0xffd080, size: 0.13,
+  opacity: 0.5, rise: 0.12, wander: 0.15 });   // golden spirit motes around the torii
 chochinLantern(9.5, 3.0, -9.75, 1.0);
 
 // ═══════════ STATION (fence = platform-end barrier) ═══════════
@@ -323,12 +375,21 @@ box(7.9, 0.17, 0.25, new THREE.MeshStandardMaterial({ color: 0xd8b83a, roughness
 box(1.6, 0.45, 0.5, M.woodMid, 8.2, 0.22, 11.85);                            // bench
 for (let i = 0; i < 12; i++) cyl(0.05, 0.05, 1.4, M.tatami, 7.3 + i * 0.45, 0.7, 13.1);
 box(4.2, 0.08, 0.08, M.woodDark, 9.75, 1.1, 13.1); box(4.2, 0.08, 0.08, M.woodDark, 9.75, 0.45, 13.1);
+// little signal post at the platform end — the lamp pulses like a level crossing
+box(0.07, 0.95, 0.07, M.iron, 12.9, 0.48, 11.2);
+const signalMat = new THREE.MeshStandardMaterial({ color: 0x3a0a08, emissive: 0xff4030, emissiveIntensity: 1.4, roughness: .4 });
+const signalLamp = ball(0.09, signalMat, 12.9, 1.05, 11.2, scene, 1); signalLamp.castShadow = false;
 chochinLantern(9.5, 2.8, 9.5, 0.9);
 
 // ═══════════ TEA ROOM (quiet annex, no cards yet) ═══════════
 box(1.4, 0.35, 0.9, M.woodDark, -9.5, 0.18, 9.5);
 ball(0.35, new THREE.MeshStandardMaterial({ color: 0x4a6b8a, roughness: .9 }), -10.3, 0.1, 9.5, scene, 0.35);
 ball(0.35, new THREE.MeshStandardMaterial({ color: 0x4a6b8a, roughness: .9 }), -8.7, 0.1, 9.5, scene, 0.35);
+// incense burner on the low table — a thin wisp of smoke rises from the stick
+cyl(0.09, 0.11, 0.08, M.iron, -9.2, 0.4, 9.3, scene, 10);
+rod(-9.2, 0.44, 9.3, -9.16, 0.72, 9.34, 0.006, M.woodDark);
+drift(-9.17, 0.72, 9.32, { count: 14, spread: [0.04, 1.3, 0.04], color: 0xbfc8d0, size: 0.16,
+  opacity: 0.22, rise: 0.22, wander: 0.05 });                                  // incense smoke
 chochinLantern(-9.5, 2.8, 9.5, 0.9);
 
 // ═══════════ GRAMMAR ANNEX (east wing, 2x2 rooms) ═══════════
@@ -407,16 +468,6 @@ pointGlow(27.2, 2.2, 7.4, 0xff8055, 9, 5);            // power machine wash
 // portalArmed re-arms only after you step OUT of every ring, so you never bounce back.
 // Sparkles intensify as you approach; a destination pill names the area ahead.
 const portalFx = [];
-function sparkTexture() {
-  const c = document.createElement('canvas'); c.width = c.height = 32;
-  const g = c.getContext('2d');
-  const grad = g.createRadialGradient(16, 16, 1, 16, 16, 15);
-  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.4, 'rgba(255,255,255,.45)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  g.fillStyle = grad; g.fillRect(0, 0, 32, 32);
-  return new THREE.CanvasTexture(c);
-}
-const SPARK_TEX = sparkTexture();
 function portalAt(x, z, ry, color = 0x7fe0d0) {
   const g = new THREE.Group();
   cyl(0.9, 1.1, 0.25, M.stoneDark, 0, 0.12, 0, g, 20);                      // stone base
@@ -518,6 +569,8 @@ for (let i = 0; i < 3; i++) box(1.4, 0.06, 0.06, M.woodLight, -12.6, 0.5 + i * 0
 box(1.0, 0.4, 0.7, M.woodDark, -7.2, 0.2, 1.8);                       // low table
 cyl(0.09, 0.11, 0.14, M.stoneDark, -7.2, 0.47, 1.8, scene, 10);       // tea cup
 pointGlow(-9.5, 2.6, 0, 0xffc070, 8, 8);
+drift(-10.4, 0.45, 1.2, { count: 16, spread: [0.9, 1.0, 0.6], color: 0xaac4f0, size: 0.09,
+  opacity: 0.3, rise: 0.04, wander: 0.1 });   // pale dream motes above the futon
 
 // ═══════════ BATH ═══════════
 const tub = new THREE.Group();
@@ -583,6 +636,8 @@ rod(6.6, 1.85, 1.5, 6.6, 1.79, 1.5, 0.008, M.iron);                            /
 rod(7.0, 1.85, 1.5, 7.0, 1.79, 1.5, 0.008, M.iron);
 rod(7.4, 1.85, 1.5, 7.4, 1.79, 1.5, 0.008, M.iron);
 pointGlow(7, 2.3, 1.5, 0xffc070, 9, 6);                                       // warm the kettle corner
+drift(7, 1.4, 1.5, { count: 20, spread: [0.12, 1.1, 0.12], color: 0xdfe8ee, size: 0.28,
+  opacity: 0.32, rise: 0.28, wander: 0.06 });                                  // steam off the kettle
 // pan rail on the north wall face (z=-5.35), east of the shrine door (door lane x 8.4..10.6)
 rod(11.0, 1.92, -5.33, 12.7, 1.92, -5.33, 0.02, M.iron);
 for (let i = 0; i < 3; i++) {
@@ -600,6 +655,8 @@ box(0.3, 0.06, 0.2, M.stone, 0.78, 0.82, -10.1);                        // ink s
 cyl(0.04, 0.04, 0.5, M.iron, -0.7, 1.0, -10.1, scene, 8);
 ball(0.12, M.chochin, -0.7, 1.3, -10.1, scene, 0.8);
 pointGlow(-0.7, 1.35, -10.1, 0xffd090, 8, 4);
+drift(-0.7, 0.85, -10.1, { count: 22, spread: [0.7, 1.2, 0.7], color: 0xd8e2f0, size: 0.07,
+  opacity: 0.3, rise: 0.02, wander: 0.05 });   // dust motes in the desk-lamp light
 // hanging scroll
 box(0.7, 1.6, 0.04, M.white, 1.8, 1.9, -13.35);
 box(0.8, 0.06, 0.06, M.woodDark, 1.8, 2.72, -13.35);
@@ -613,6 +670,8 @@ for (const s of [0, 3]) for (let b = 0; b < 7; b++) {  // books only on rows 1 &
 }
 shelf.position.set(-9.5, 0, -13.0); scene.add(shelf);
 box(1.4, 0.5, 0.9, M.woodMid, -7.4, 0.25, -9.5);                        // reading table
+drift(-9.5, 0.4, -12.6, { count: 24, spread: [1.2, 1.8, 0.6], color: 0xd8cfae, size: 0.06,
+  opacity: 0.25, rise: 0.015, wander: 0.04 });                          // old-book dust by the shelf
 chochinLantern(-9.5, 3.0, -9.5, 1.1);
 
 // ---------- card textures ----------
@@ -1183,6 +1242,37 @@ function animate() {
     crossEl.style.color = hState === 'front' ? '#ffd98a' : hState === 'back' ? '#8fd0c8' : '#f5e6d0';
     crossEl.style.fontSize = hovered ? '22px' : '18px';
   }
+
+  // floating lanterns: bob, slow spin, halo flicker, rune-ring pulse
+  for (const f of floaters) {
+    f.g.position.y = f.baseY + Math.sin(t * 0.9 + f.phase) * 0.09;
+    f.g.rotation.y = t * 0.15 + f.phase;
+    f.g.rotation.z = Math.sin(t * 0.7 + f.phase) * 0.04;
+    f.halo.material.opacity = 0.42 + Math.sin(t * 2.6 + f.phase) * 0.14;
+    f.ring.rotation.z = t * 0.4 + f.phase;
+    f.ring.material.opacity = 0.22 + Math.sin(t * 1.8 + f.phase) * 0.1;
+  }
+  // drift particles: deterministic rise + wander, optional blink (fireflies)
+  for (const d of driftSystems) {
+    const p = d.geo.attributes.position;
+    for (let i = 0; i < d.count; i++) {
+      const s = d.seed[i], i3 = i * 3;
+      p.setXYZ(i,
+        d.base[i3] + Math.sin(t * 0.31 + s) * d.wander,
+        d.rise ? (d.base[i3 + 1] + t * d.rise + s) % d.span : d.base[i3 + 1] + Math.sin(t * 0.4 + s) * 0.15,
+        d.base[i3 + 2] + Math.cos(t * 0.23 + s * 1.7) * d.wander);
+    }
+    p.needsUpdate = true;
+    if (d.blink) {
+      const c = d.geo.attributes.color;
+      for (let i = 0; i < d.count; i++) {
+        const b = 0.12 + 0.88 * Math.max(0, Math.sin(t * 1.4 + d.seed[i] * 2.3));
+        c.setXYZ(i, d.bc.r * b, d.bc.g * b, d.bc.b * b);
+      }
+      c.needsUpdate = true;
+    }
+  }
+  signalMat.emissiveIntensity = 0.5 + 1.3 * Math.max(0, Math.sin(t * 2.2));   // station signal pulse
 
   tubWater.position.y = 0.95 + Math.sin(t * 1.4) * 0.015;
   const sp = steam.geometry.attributes.position;
