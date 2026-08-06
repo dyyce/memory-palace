@@ -65,7 +65,7 @@
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · Shift to run · Space to jump · C toggles crouch · E or click to flip · 1/2/3 = again/good/easy · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-06 · v23 (2 areas, portal-linked)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-06 · v24 (2 areas, portal-linked)</p>
 </div>
 <div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
@@ -360,8 +360,6 @@ for (let i = 0; i < 4; i++) box(0.12, 0.08, 0.9, M.woodLight, 7.6 + i * 0.27, 0.
 box(1.8, 1.6, 1.6, M.woodDark, 12.6, 0.8, -9.75);
 box(2.2, 0.3, 2.0, M.red, 12.6, 1.75, -9.75);
 stoneLanternAt(7.6, -7.6, 0.9, false); stoneLanternAt(7.6, -11.9, 0.9, false); // decorative: emissive only
-drift(10.5, 0.3, -9.75, { count: 36, spread: [1.6, 2.6, 1.4], color: 0xffd080, size: 0.13,
-  opacity: 0.5, rise: 0.12, wander: 0.15 });   // golden spirit motes around the torii
 chochinLantern(9.5, 3.0, -9.75, 1.0);
 
 // ═══════════ STATION (fence = platform-end barrier) ═══════════
@@ -564,8 +562,6 @@ for (let i = 0; i < 3; i++) box(1.4, 0.06, 0.06, M.woodLight, -12.6, 0.5 + i * 0
 box(1.0, 0.4, 0.7, M.woodDark, -7.2, 0.2, 1.8);                       // low table
 cyl(0.09, 0.11, 0.14, M.stoneDark, -7.2, 0.47, 1.8, scene, 10);       // tea cup
 pointGlow(-9.5, 2.6, 0, 0xffc070, 8, 8);
-drift(-10.4, 0.45, 1.2, { count: 16, spread: [0.9, 1.0, 0.6], color: 0xaac4f0, size: 0.09,
-  opacity: 0.3, rise: 0.04, wander: 0.1 });   // pale dream motes above the futon
 
 // ═══════════ BATH ═══════════
 const tub = new THREE.Group();
@@ -650,8 +646,6 @@ box(0.3, 0.06, 0.2, M.stone, 0.78, 0.82, -10.1);                        // ink s
 cyl(0.04, 0.04, 0.5, M.iron, -0.7, 1.0, -10.1, scene, 8);
 ball(0.12, M.chochin, -0.7, 1.3, -10.1, scene, 0.8);
 pointGlow(-0.7, 1.35, -10.1, 0xffd090, 8, 4);
-drift(-0.7, 0.85, -10.1, { count: 22, spread: [0.7, 1.2, 0.7], color: 0xd8e2f0, size: 0.07,
-  opacity: 0.3, rise: 0.02, wander: 0.05 });   // dust motes in the desk-lamp light
 // hanging scroll
 box(0.7, 1.6, 0.04, M.white, 1.8, 1.9, -13.35);
 box(0.8, 0.06, 0.06, M.woodDark, 1.8, 2.72, -13.35);
@@ -665,8 +659,6 @@ for (const s of [0, 3]) for (let b = 0; b < 7; b++) {  // books only on rows 1 &
 }
 shelf.position.set(-9.5, 0, -13.0); scene.add(shelf);
 box(1.4, 0.5, 0.9, M.woodMid, -7.4, 0.25, -9.5);                        // reading table
-drift(-9.5, 0.4, -12.6, { count: 24, spread: [1.2, 1.8, 0.6], color: 0xd8cfae, size: 0.06,
-  opacity: 0.25, rise: 0.015, wander: 0.04 });                          // old-book dust by the shelf
 chochinLantern(-9.5, 3.0, -9.5, 1.1);
 
 // ---------- card textures ----------
