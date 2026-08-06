@@ -63,9 +63,9 @@
   <p>寝室 Bedroom → お風呂 Bath → 台所 Kitchen → 庭園 Garden → 図書室 Library → 書斎 Study → 神社 Shrine · 駅 Station annex</p>
   <p>文法別館 Grammar Annex: step into the glowing portal in the 庭園 Garden — 仕分け場 → て形工房 → 形容詞の間 → たいと可能の館</p>
   <p><b>Click to enter</b></p>
-  <p>WASD / arrows to walk · Shift to run · Space to jump · C to crouch · E or click to flip · 1/2/3 = again/good/easy · ESC to release</p>
+  <p>WASD / arrows to walk · Shift to run · Space to jump · C toggles crouch · E or click to flip · 1/2/3 = again/good/easy · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-05 · v21 (2 areas, portal-linked)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-05 · v22 (2 areas, portal-linked)</p>
 </div>
 <div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
@@ -73,7 +73,7 @@
 <div id="cross">+</div>
 <div id="phint"></div>
 <div id="warp"></div>
-<div id="hint">Shift = run · Space = jump · C = crouch · E / click = flip · 1 again · 2 good · 3 easy · gold = mastered</div>
+<div id="hint">Shift = run · Space = jump · C = crouch (toggle) · E / click = flip · 1 again · 2 good · 3 easy · gold = mastered</div>
 <script type="importmap">
 { "imports": {
   "three": "https://unpkg.com/three@0.164.1/build/three.module.js",
@@ -1124,12 +1124,14 @@ addEventListener('keydown', e => {
   if (e.code === 'Digit1') gradeLookedAt(1);
   if (e.code === 'Digit2') gradeLookedAt(2);
   if (e.code === 'Digit3') gradeLookedAt(3);
+  if (e.code === 'KeyC') crouched = !crouched;   // toggle: press to duck, press again to stand
 });
 addEventListener('keyup', e => keys[e.code] = false);
 addEventListener('pointerdown', e => { if (controls.isLocked && e.button === 0) flipLookedAt(); });
 
 const vel = new THREE.Vector3();
 let vy = 0, grounded = true;   // vertical velocity for jumping
+let crouched = false;          // toggled with C
 let fovPunch = 0;              // 1 -> 0 after a portal warp
 const PR = 0.32;
 function collide(p) {
@@ -1193,7 +1195,7 @@ function animate() {
     if (keys.Space && grounded) { vy = 4.6; grounded = false; }
     vy = Math.max(vy - 12 * dt, -9);
     camera.position.y += vy * dt;
-    const eyeTarget = (keys.KeyC || keys.ControlLeft || keys.ControlRight) ? 0.95 : 1.6;   // crouch
+    const eyeTarget = crouched ? 0.95 : 1.6;   // toggled crouch
     if (camera.position.y <= eyeTarget) {
       if (vy <= 0) { vy = 0; grounded = true; }
       camera.position.y += (eyeTarget - camera.position.y) * Math.min(1, dt * 10);   // ease up
