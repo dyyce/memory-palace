@@ -67,7 +67,7 @@
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · Shift to run · Space to jump · C toggles crouch · E or click to flip (hears the word) · R to replay it · 1/2/3 = again/good/easy · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-09 · v31 (2 areas, portal-linked)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-09 · v32 (2 areas, portal-linked)</p>
 </div>
 <div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
@@ -1227,12 +1227,14 @@ chochinLantern(45, 2.6, 19.4, 0.9);
 pointGlow(45, 2.0, 20, 0x8a6cd0, 8, 7);   // violet lab glow
 const debugCards = [];
 const VOICE_SAMPLES = [
-  ['ElevenLabs · Rachel', 'current voice', 'el-rachel-current.mp3'],
-  ['ElevenLabs · Aria', 'same engine, other voice', 'el-aria.mp3'],
-  ['Gemini · Kore', 'Google, female', 'gemini-kore.mp3'],
-  ['Gemini · Charon', 'Google, male', 'gemini-charon.mp3'],
-  ['Qwen · Momo', 'Alibaba multilingual', 'qwen-momo.wav'],
-  ['MiniMax · Wise Woman', 'speech-02-hd', 'minimax-wise-woman.mp3'],
+  ['Qwen · Momo', 'favorite #1', 'qwen-momo.wav'],
+  ['Qwen · Serena', 'gentle young woman', 'qwen-serena.wav'],
+  ['Qwen · Mia', 'gentle as spring water', 'qwen-mia.wav'],
+  ['Qwen · Kai', 'soothing, male', 'qwen-kai.wav'],
+  ['MiniMax · Wise Woman', 'favorite #2', 'minimax-wise-woman.mp3'],
+  ['MiniMax · Calm Woman', 'calm, steady', 'minimax-calm-woman.mp3'],
+  ['MiniMax · Lively Girl', 'upbeat, bright', 'minimax-lively-girl.mp3'],
+  ['MiniMax · Deep Voice', 'male, low', 'minimax-deep-voice-man.mp3'],
 ];
 {
   // sign on the north wall
@@ -1240,9 +1242,9 @@ const VOICE_SAMPLES = [
     new THREE.MeshBasicMaterial({ map: cardTexture('音の実験室', 'flip a card to hear the voice', false), transparent: true, side: THREE.DoubleSide }));
   sign.position.set(45, 2.2, 17.16); scene.add(sign);
   VOICE_SAMPLES.forEach(([label, sub, file], i) => {
-    const x = 42.9 + i * 0.84;
+    const x = 42.55 + i * 0.7;
     cyl(0.16, 0.22, 0.9, M.stoneDark, x, 0.45, 19.2, scene, 12);          // pedestal
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.39),
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.58, 0.36),
       new THREE.MeshBasicMaterial({ map: cardTexture(label, sub, false), transparent: true, side: THREE.DoubleSide }));
     m.position.set(x, 1.35, 19.2);
     m.userData = { debug: 'audio/debug/' + file, title: label, flipped: false, phase: rand() * 6.28, baseY: 1.35 };
