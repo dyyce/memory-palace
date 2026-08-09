@@ -67,7 +67,7 @@
   <p><b>Click to enter</b></p>
   <p>WASD / arrows to walk · Shift to run · Space to jump · C toggles crouch · E or click to flip (hears the word) · R to replay it · 1/2/3 = again/good/easy · ESC to release</p>
   <p>Daily ritual: walk the route, flip each card, grade it. Gold cards are mastered.</p>
-  <p style="opacity:.4;font-size:11px">build 2026-08-09 · v30 (2 areas, portal-linked)</p>
+  <p style="opacity:.4;font-size:11px">build 2026-08-09 · v31 (2 areas, portal-linked)</p>
 </div>
 <div id="resume"><span>クリックで続ける — click to continue</span></div>
 <div id="hud"><div class="room" id="roomName">庭園 <span>Garden</span></div><div class="rule" id="roomRule"></div></div>
@@ -618,7 +618,7 @@ pointGlow(27.2, 2.2, 7.4, 0xff8055, 9, 5);            // power machine wash
 // portalArmed re-arms only after you step OUT of every ring, so you never bounce back.
 // Sparkles intensify as you approach; a destination pill names the area ahead.
 const portalFx = [];
-function portalAt(x, z, ry, color = 0x7fe0d0) {
+function portalAt(x, z, ry, color = 0x7fe0d0, scale = 1) {
   const g = new THREE.Group();
   cyl(0.9, 1.1, 0.25, M.stoneDark, 0, 0.12, 0, g, 20);                      // stone base
   const ring = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.09, 12, 40),
@@ -637,19 +637,26 @@ function portalAt(x, z, ry, color = 0x7fe0d0) {
   const pMat = new THREE.PointsMaterial({ map: SPARK_TEX, size: 0.09, transparent: true, opacity: 0.12,
     color, depthWrite: false, blending: THREE.AdditiveBlending });
   g.add(new THREE.Points(pGeo, pMat));
-  g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
-  pointGlow(x, 1.7, z, color, 10, 6);
+  g.position.set(x, 0, z); g.rotation.y = ry; g.scale.setScalar(scale); scene.add(g);
+  pointGlow(x, 1.7 * scale, z, color, 10, 6);
   portalFx.push({ ring, disc, pGeo, pMat, pSeed });
   return g;
 }
 // garden portal (by the path, facing west) <-> annex portal (Sorting Hall, facing east)
 portalAt(2.5, 2.8, Math.PI / 2);
 portalAt(14.9, -2.0, -Math.PI / 2, 0xb48cf2);   // violet on the annex side
+// SECRET portal: a small dim ring behind the garden's SW stone lantern <-> the Sound Lab
+portalAt(-4.4, 4.5, Math.PI / 4, 0x8a6cd0, 0.55);
+portalAt(45, 22.2, -Math.PI / 2, 0x8a6cd0, 0.55);
 const PORTALS = [
   { x: 2.5, z: 2.8, ex: 16.2, ez: -2.0, css: '#b48cf2',
     name: '文法別館 · Grammar Annex', desc: 'verb groups · te-form presses · adjectives · たい & potential' },
   { x: 14.9, z: -2.0, ex: 1.2, ez: 2.8, css: '#7fe0d0',
     name: '一日の宮殿 · The Day Palace', desc: 'daily-life words · questions · the torii machines' },
+  { x: -4.4, z: 4.5, ex: 45, ez: 21.3, css: '#8a6cd0', secret: true,
+    name: '音の実験室 · Sound Lab', desc: 'voice samples — pick your Japanese speaker' },
+  { x: 45, z: 22.2, ex: -3.6, ez: 3.9, css: '#8a6cd0', secret: true,
+    name: '庭園 · Garden', desc: 'back to the palace' },
 ];
 let portalArmed = true;
 const warpEl = document.getElementById('warp');
@@ -684,8 +691,9 @@ function updatePortalProximity() {
   PORTALS.forEach((o, i) => {
     const d = Math.hypot(camera.position.x - o.x, camera.position.z - o.z);
     const inten = Math.max(0, Math.min(1, 1 - d / 4));
-    portalFx[i].pMat.opacity = 0.12 + inten * 0.78;
-    if (d < 3.2 && (!near || d < near.d)) near = { d, o };
+    portalFx[i].pMat.opacity = (o.secret ? 0.06 : 0.12) + inten * (o.secret ? 0.5 : 0.78);
+    const hintDist = o.secret ? 1.5 : 3.2;   // secret portals reveal themselves only when you stumble onto them
+    if (d < hintDist && (!near || d < near.d)) near = { d, o };
   });
   const show = !!near, name = near ? near.o.name : null;
   if (show !== lastHintShown) { phintEl.style.display = show ? 'block' : 'none'; lastHintShown = show; }
@@ -1210,6 +1218,47 @@ if (PARAMS.has('validate')) {
     if (violations.some(v => v.startsWith(m.userData.title + ':'))) m.material.color.set(0xff6666);
 }
 
+// ---------- 音の実験室 SOUND LAB (secret room: voice samples, not study cards) ----------
+// reached only via the small dim portal behind the garden's SW stone lantern
+floorRect(45, 20, 6.3, 6.3, M.woodDark, true);
+wallSeg(41.85, 16.85, 48.15, 17.1); wallSeg(41.85, 22.9, 48.15, 23.15);
+wallSeg(41.85, 16.85, 42.1, 23.15); wallSeg(47.9, 16.85, 48.15, 23.15);
+chochinLantern(45, 2.6, 19.4, 0.9);
+pointGlow(45, 2.0, 20, 0x8a6cd0, 8, 7);   // violet lab glow
+const debugCards = [];
+const VOICE_SAMPLES = [
+  ['ElevenLabs · Rachel', 'current voice', 'el-rachel-current.mp3'],
+  ['ElevenLabs · Aria', 'same engine, other voice', 'el-aria.mp3'],
+  ['Gemini · Kore', 'Google, female', 'gemini-kore.mp3'],
+  ['Gemini · Charon', 'Google, male', 'gemini-charon.mp3'],
+  ['Qwen · Momo', 'Alibaba multilingual', 'qwen-momo.wav'],
+  ['MiniMax · Wise Woman', 'speech-02-hd', 'minimax-wise-woman.mp3'],
+];
+{
+  // sign on the north wall
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.1),
+    new THREE.MeshBasicMaterial({ map: cardTexture('音の実験室', 'flip a card to hear the voice', false), transparent: true, side: THREE.DoubleSide }));
+  sign.position.set(45, 2.2, 17.16); scene.add(sign);
+  VOICE_SAMPLES.forEach(([label, sub, file], i) => {
+    const x = 42.9 + i * 0.84;
+    cyl(0.16, 0.22, 0.9, M.stoneDark, x, 0.45, 19.2, scene, 12);          // pedestal
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.39),
+      new THREE.MeshBasicMaterial({ map: cardTexture(label, sub, false), transparent: true, side: THREE.DoubleSide }));
+    m.position.set(x, 1.35, 19.2);
+    m.userData = { debug: 'audio/debug/' + file, title: label, flipped: false, phase: rand() * 6.28, baseY: 1.35 };
+    scene.add(m); debugCards.push(m);
+  });
+}
+const debugAudio = {};
+function playDebug(m) {
+  const u = m.userData;
+  for (const k in debugAudio) { debugAudio[k].pause(); debugAudio[k].currentTime = 0; }
+  const a = debugAudio[u.debug] ??= new Audio(u.debug);
+  a.currentTime = 0; a.play().catch(() => {});
+  m.material.color.set(0x8fd0c8);
+  setTimeout(() => m.material.color.set(0xffffff), 350);
+}
+
 // ---------- progress tracking (localStorage ritual log) ----------
 const PKEY = 'palace-progress-v1';
 const prog = Object.assign({ cards: {}, streak: 0, lastDay: '' },
@@ -1241,7 +1290,7 @@ updateProgHUD();
 
 function gradeLookedAt(g) { // 1 = again, 2 = good, 3 = easy
   const m = lookedAtCard();
-  if (!m) return;
+  if (!m || m.userData.debug) return;
   if (!m.userData.flipped) { nudgeFlipFirst(m); return; }   // flip before you grade
   const cp = cardProg(m.userData.title);
   cp.seen++;
@@ -1271,6 +1320,7 @@ const ROOM_INFO = [
   { c: [17.7, 4.75], ja: 'て形工房', en: 'Te-form Workshop', rule: 'five presses and one VIP stamp — 行く is the exception' },
   { c: [27.2, -4.75], ja: '形容詞の間', en: 'Adjective Gallery', rule: 'い-wall vs な-wall — きれいな glows on the trap pedestal' },
   { c: [27.2, 4.75], ja: 'たいと可能の館', en: 'Desire & Potential', rule: 'wishes at the fountain, powers from the machine' },
+  { c: [45, 20], ja: '音の実験室', en: 'Sound Lab', rule: 'flip a card to hear the voice — pick your Japanese speaker' },
 ];
 const roomEl = document.getElementById('roomName'), ruleEl = document.getElementById('roomRule');
 let lastRoom = '';
@@ -1326,7 +1376,7 @@ const crossEl = document.getElementById('cross');
 let lastHoverState = '';
 function lookedAtCard() {
   ray.setFromCamera(new THREE.Vector2(0, 0), camera);
-  const hit = ray.intersectObjects(flipCards)[0];
+  const hit = ray.intersectObjects(flipCards.concat(debugCards))[0];
   return hit ? hit.object : null;
 }
 
@@ -1380,11 +1430,15 @@ function startFlip(m) {
 }
 function flipLookedAt() {
   const m = lookedAtCard();
-  if (m) startFlip(m);
+  if (!m) return;
+  if (m.userData.debug) { playDebug(m); return; }   // sound-lab samples play, never flip
+  startFlip(m);
 }
 function hearLookedAt() {
   const m = lookedAtCard();
-  if (m) speakJP(m.userData);
+  if (!m) return;
+  if (m.userData.debug) { playDebug(m); return; }
+  speakJP(m.userData);
 }
 function nudgeFlipFirst(m) {   // grading an unflipped card pulses red instead of grading
   m.material.color.set(0xffb0a0);
@@ -1505,6 +1559,7 @@ function animate() {
     m.position.y = m.userData.baseY + Math.sin(t * 1.1 + m.userData.phase) * 0.05;
     m.lookAt(camera.position.x, m.position.y, camera.position.z);
   });
+  debugCards.forEach(m => { m.position.y = m.userData.baseY + Math.sin(t * 1.1 + m.userData.phase) * 0.04; });
   renderer.render(scene, camera);
 }
 renderer.shadowMap.needsUpdate = true;   // bake the one-time static shadow pass on frame 1
